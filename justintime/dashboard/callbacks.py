@@ -48,7 +48,7 @@ def attach(app: Dash, engine) -> None:
         Output("adcmap-selection-ab-diff",'options'),
         Input("add-second-graph-check", "value"))
     def enable_secondary_plots(check):
-         options=[
+        options=[
             {'label': 'Z', 'value': 'Z', 'disabled' : ("Y" not in check)},
             {'label': 'V', 'value': 'V', 'disabled' : ("Y" not in check)},
             {'label': 'U', 'value': 'U', 'disabled' : ("Y" not in check)},
@@ -84,67 +84,6 @@ def attach(app: Dash, engine) -> None:
         tr_nums = [{'label':str(n), 'value':str(n)} for n in engine.get_trigger_record_list(raw_data_file)]
         logging.debug(f'Trigger nums: {tr_nums}')
         return tr_nums
-
-
-    # def calc_mean_std_by_plane(df, planes):
-    #     df_std = df.std()
-    #     df_mean = df.mean()
-    #     logging.debug(f"Mean and standard deviation calculated")
-
-    #     p = {k:list(set(v) & set(df.columns)) for k,v in planes.items()}
-    #     df_p0_mean = df_mean[p[0]]
-    #     df_p1_mean = df_mean[p[1]]
-    #     df_p2_mean = df_mean[p[2]]
-
-    #     df_p0_std = df_std[p[0]]
-    #     df_p1_std = df_std[p[1]]
-    #     df_p2_std = df_std[p[2]]
-
-    #     return (df_std, df_mean, df_p0_mean, df_p1_mean, df_p2_mean, df_p0_std, df_p1_std, df_p2_std)
-   
-
-    # def calc_fft(df):
-    #     df_fft = df.apply(np.fft.fft)
-    #     df_fft_sq = np.abs(df_fft) ** 2
-    #     freq = np.fft.fftfreq(df.index.size, 0.5e-6)
-    #     df_fft['Freq'] = freq
-    #     df_fft_sq['Freq'] = freq
-    #     # Cleanup fft2 for plotting
-    #     df_fft_sq = df_fft_sq[df_fft_sq['Freq']>0]
-    #     df_fft_sq = df_fft_sq.set_index('Freq')
-    #     return df_fft, df_fft_sq
-
-
-    # def calc_fft_sum_by_plane(df, planes):
-    #     p = {k:list(set(v) & set(df.columns)) for k,v in planes.items()}
-
-    #     df_sum_U = df[p[0]].sum(axis=1).to_frame()
-    #     df_sum_U = df_sum_U.rename(columns= {0: 'U-plane'})
-    #     df_sum_V = df[p[1]].sum(axis=1).to_frame()
-    #     df_sum_V = df_sum_V.rename(columns= {0: 'V-plane'})
-    #     df_sum_Z = df[p[2]].sum(axis=1).to_frame()
-    #     df_sum_Z = df_sum_Z.rename(columns= {0: 'Z-plane'})
-    #     df_sums = pd.concat([df_sum_U, df_sum_V, df_sum_Z], axis=1)
-
-
-    #     df_fft = df_sums.apply(np.fft.fft)
-    #     df_fft2 = np.abs(df_fft) ** 2
-    #     freq = np.fft.fftfreq(df_sums.index.size, 0.5e-6)
-    #     df_fft2['Freq'] = freq
-    #     df_fft2 = df_fft2[df_fft2['Freq']>0]
-    #     df_fft2 = df_fft2.set_index('Freq')
-
-    #     return df_fft2.sort_index()
-
-
-    # def calc_diffs(df_a, df_b):
-
-    #     # value_offset=4096
-    #     dt_a_rst = df_a.reset_index().drop('ts', axis=1)
-    #     dt_b_rst = df_b.reset_index().drop('ts', axis=1)
-    #     dt_ab_diff = (dt_a_rst.astype('int')-dt_b_rst.astype('int'))
-
-    #     return dt_ab_diff
 
     @app.callback(
         Output('mean_std_by_plane_card', 'children'),
@@ -220,6 +159,8 @@ def attach(app: Dash, engine) -> None:
         df_aV_mean, df_aV_std = df_aV.mean(), df_aV.std()
         df_aZ_mean, df_aZ_std = df_aZ.mean(), df_aZ.std()
 
+        # import ipdb
+        # ipdb.set_trace()
         logging.debug(f"Trigger record {trig_rec_num_a} from {raw_data_file_a} loaded")
 
         if plot_two_plots:
@@ -539,58 +480,59 @@ def attach(app: Dash, engine) -> None:
         # # group_fembs = groupby(offchan_to_hw, femb_id_from_off)
         # # fembs = {k: [int(x) for x in d] for k,d in group_fembs}
         # femb_to_chans = {k: [int(x) for x in d] for k,d in groupby(offchan_to_hw, femb_id_from_off)}
-        df_a_cnr = df_a.copy()
-        df_a_cnr = df_a_cnr-df_a_cnr.mean()
-        for p, p_chans in planes_a.items():
-            for f,f_chans in engine.femb_to_offch.items():
-                chans = list(set(p_chans) & set(f_chans))
-                df_a_cnr[chans] = df_a_cnr[chans].sub(df_a_cnr[chans].mean(axis=1), axis=0)
+        if adcmap_selection_a_cnr:
+            df_a_cnr = df_a.copy()
+            df_a_cnr = df_a_cnr-df_a_cnr.mean()
+            for p, p_chans in planes_a.items():
+                for f,f_chans in engine.femb_to_offch.items():
+                    chans = list(set(p_chans) & set(f_chans))
+                    df_a_cnr[chans] = df_a_cnr[chans].sub(df_a_cnr[chans].mean(axis=1), axis=0)
 
-        fzmin, fzmax = tr_color_range
-        if 'Z' in adcmap_selection_a_cnr:
-            if plot_two_plots:
-                fig = px.imshow(df_a_cnr[planes_a[2]], zmin=fzmin, zmax=fzmax, title=f"Z-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}, B: Run {info_b['run_number']}: {info_b['trigger_number']}", aspect='auto')
-            else:
-                fig = px.imshow(df_a_cnr[planes_a[2]], zmin=fzmin, zmax=fzmax, title=f"Z-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}", aspect='auto')
-            fig.update_layout(
-                width=fig_w,
-                height=fig_h,
-            )
-            children += [
-                html.B("ADC Counts: Z-plane A-B"),
-                html.Hr(),
-                dcc.Graph(figure=fig),
-            ]
-
-        if 'V' in adcmap_selection_a_cnr:
-            if plot_two_plots:
-                fig = px.imshow(df_a_cnr[planes_a[1]], zmin=fzmin, zmax=fzmax, title=f"V-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}, B: Run {info_b['run_number']}: {info_b['trigger_number']}", aspect='auto')
-            else:
-                fig = px.imshow(df_a_cnr[planes_a[1]], zmin=fzmin, zmax=fzmax, title=f"V-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}", aspect='auto')
-            fig.update_layout(
-                width=fig_w,
-                height=fig_h,
-            )
-            children += [
-                html.B("ADC Counts: V-plane A-B"),
-                html.Hr(),
-                dcc.Graph(figure=fig),
-            ]
-
-        if 'U' in adcmap_selection_a_cnr:
-            if plot_two_plots:
-                fig = px.imshow(df_a_cnr[planes_a[0]], zmin=fzmin, zmax=fzmax, title=f"U-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}, B: Run {info_b['run_number']}: {info_b['trigger_number']}", aspect='auto')
-            else:
-                fig = px.imshow(df_a_cnr[planes_a[0]], zmin=fzmin, zmax=fzmax, title=f"U-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}", aspect='auto')
-            fig.update_layout(
-                width=fig_w,
-                height=fig_h,
-            )
-            children += [
-                html.B("ADC Counts: U-plane A-B"),
-                html.Hr(),
-                dcc.Graph(figure=fig),
+            fzmin, fzmax = tr_color_range
+            if 'Z' in adcmap_selection_a_cnr:
+                if plot_two_plots:
+                    fig = px.imshow(df_a_cnr[planes_a[2]], zmin=fzmin, zmax=fzmax, title=f"Z-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}, B: Run {info_b['run_number']}: {info_b['trigger_number']}", aspect='auto')
+                else:
+                    fig = px.imshow(df_a_cnr[planes_a[2]], zmin=fzmin, zmax=fzmax, title=f"Z-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}", aspect='auto')
+                fig.update_layout(
+                    width=fig_w,
+                    height=fig_h,
+                )
+                children += [
+                    html.B("ADC Counts: Z-plane A-B"),
+                    html.Hr(),
+                    dcc.Graph(figure=fig),
                 ]
+
+            if 'V' in adcmap_selection_a_cnr:
+                if plot_two_plots:
+                    fig = px.imshow(df_a_cnr[planes_a[1]], zmin=fzmin, zmax=fzmax, title=f"V-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}, B: Run {info_b['run_number']}: {info_b['trigger_number']}", aspect='auto')
+                else:
+                    fig = px.imshow(df_a_cnr[planes_a[1]], zmin=fzmin, zmax=fzmax, title=f"V-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}", aspect='auto')
+                fig.update_layout(
+                    width=fig_w,
+                    height=fig_h,
+                )
+                children += [
+                    html.B("ADC Counts: V-plane A-B"),
+                    html.Hr(),
+                    dcc.Graph(figure=fig),
+                ]
+
+            if 'U' in adcmap_selection_a_cnr:
+                if plot_two_plots:
+                    fig = px.imshow(df_a_cnr[planes_a[0]], zmin=fzmin, zmax=fzmax, title=f"U-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}, B: Run {info_b['run_number']}: {info_b['trigger_number']}", aspect='auto')
+                else:
+                    fig = px.imshow(df_a_cnr[planes_a[0]], zmin=fzmin, zmax=fzmax, title=f"U-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}", aspect='auto')
+                fig.update_layout(
+                    width=fig_w,
+                    height=fig_h,
+                )
+                children += [
+                    html.B("ADC Counts: U-plane A-B"),
+                    html.Hr(),
+                    dcc.Graph(figure=fig),
+                    ]
 
         childeren_to_return = [generate_tr_card("A", info_a['run_number'], info_a['trigger_number'], dt_a, raw_data_file_a)]
         if plot_two_plots:
