@@ -20,7 +20,8 @@ def cli(interactive: bool, file_path: str) -> None:
     print(dp.name)
 
 
-    rdm = RawDataManager(dp.parent, 'ProtoWIB', 'VDColdbox')
+    # rdm = RawDataManager(dp.parent, 'ProtoWIB', 'VDColdbox')
+    rdm = RawDataManager(dp.parent, 'WIB', 'HDColdbox')
     data_files = sorted(rdm.list_files(), reverse=True)
     rich.print(data_files)
     f = dp.name
@@ -35,7 +36,7 @@ def cli(interactive: bool, file_path: str) -> None:
     rich.print(tp_df)
     if interactive:
         import IPython
-        IPython.embed()
+        IPython.embed(colors="neutral")
 
 
 

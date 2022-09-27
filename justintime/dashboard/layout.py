@@ -102,9 +102,19 @@ def generate_control_card(brain):
                 value=[]
             ),
             html.Br(),
-            html.P("Color range"),
+            html.P("ADC Color range"),
             dcc.RangeSlider(
-                id='tr-color-range-slider',
+                id='adc-color-range-slider',
+                min=-1024,
+                max=1024,
+                step=64,
+                value=[-192, 192],
+                marks={ v:f"{v}" for v in range(-1024, 1025, 256) }
+            ),
+
+            html.P("TP Color range"),
+            dcc.RangeSlider(
+                id='tp-color-range-slider',
                 min=-1024,
                 max=1024,
                 step=64,

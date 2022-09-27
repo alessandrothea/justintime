@@ -51,7 +51,7 @@ def make_static_img(df, zmin: int = None, zmax: int = None, palette:str = "Plasm
     }
 
     cs_pltly, cs_mpl = colorscale_map[palette]
-
+ 
     xmin, xmax = min(df.columns), max(df.columns)
     # ymin, ymax = min(df.index), max(df.index)
     ymin, ymax = max(df.index), min(df.index)
@@ -187,7 +187,8 @@ def attach(app: Dash, engine) -> None:
         State('trigger-record-select-B', 'value'),
         State('plot_selection', 'value'),
         State('adcmap_selection', 'value'),
-        State('tr-color-range-slider', 'value'),
+        State('adc-color-range-slider', 'value'),
+        State('tp-color-range-slider', 'value'),
         State('tr-color-palette-selector', 'value'),
         )
     def update_plots(
@@ -199,7 +200,8 @@ def attach(app: Dash, engine) -> None:
         trig_rec_num_b,
         plot_selection,
         adcmap_selection,
-        tr_color_range,
+        adc_color_range,
+        tp_color_range,
         tr_color_palette,
         ):
         # ctx = dash.callback_context
@@ -217,7 +219,11 @@ def attach(app: Dash, engine) -> None:
 
         # Load records
         info_a, df_a, tp_df_a = engine.load_entry(raw_data_file_a, int(trig_rec_num_a))
-        print(info_a, df_a, tp_df_a)
+        print("Trigger record infos:", info_a)
+        print("RAW data dataframe")
+        print(df_a)
+        print("TPs data dataframe")
+        print(tp_df_a)
         # Timestamp information
         tr_ts_sec_a = info_a['trigger_timestamp']*20/1000000000
         dt_a = datetime.datetime.fromtimestamp(tr_ts_sec_a).strftime('%c')
@@ -225,26 +231,39 @@ def attach(app: Dash, engine) -> None:
         # #----
         if plot_two_plots:
             info_b, df_b, tp_df_b = engine.load_entry(raw_data_file_b, int(trig_rec_num_b))
+            print("Trigger record infos:", info_b)
+            print("RAW data dataframe")
+            print(df_b)
+            print("TPs data dataframe")
+            print(tp_df_b)
             # Timestamp information
             ts_b = info_b['trigger_timestamp']*20/1000000000
             dt_b = datetime.datetime.fromtimestamp(ts_b).strftime('%c')
 
 
-        # channels = list(set(df_a.columns) | set(df_b.columns)) if plot_two_plots else list(df_a.columns)
+        channels = list(range(0,2560))
+
+        if not df_a.empty:
+            channels = list(set(df_a.columns) | set(df_b.columns)) if plot_two_plots else list(df_a.columns)
         # Watch out, VD specific
-        channels = list(range(0,3392))
+        # channels = list(range(0,3392))
 
         
 
         group_planes = groupby(channels, lambda ch: engine.ch_map.get_plane_from_offline_channel(int(ch)))
         planes = {k: [x for x in d if x] for k,d in group_planes}
-        # print(planes)
+        print("Reconstructed list of planes")
+        # rich.print(planes)
 
         # Splitting by plane
         planes_a = {k:sorted(set(v) & set(df_a.columns)) for k,v in planes.items()}
         df_aU = df_a[planes_a.get(0, {})]
         df_aV = df_a[planes_a.get(1, {})]
         df_aZ = df_a[planes_a.get(2, {})]
+
+        # rich.print(df_aU)
+        # rich.print(df_aV)
+        # rich.print(df_aZ)
 
         df_aU_mean, df_aU_std = df_aU.mean(), df_aU.std()
         df_aV_mean, df_aV_std = df_aV.mean(), df_aV.std()
@@ -505,9 +524,9 @@ def attach(app: Dash, engine) -> None:
 
         #-------------
         if 'TPs' in adcmap_selection:
-            fzmin, fzmax = tr_color_range
+            fzmin, fzmax = tp_color_range
 
-            rich.print(tp_df_a)
+            # rich.print(tp_df_a)
 
             tp_df_tsoff_a = tp_df_a.copy()
             ts_min = tp_df_tsoff_a['time_start'].min()
@@ -517,11 +536,15 @@ def attach(app: Dash, engine) -> None:
             tp_df_aU = tp_df_tsoff_a[tp_df_tsoff_a['channel'].isin(planes.get(0, {}))]
             tp_df_aV = tp_df_tsoff_a[tp_df_tsoff_a['channel'].isin(planes.get(1, {}))]
             tp_df_aZ = tp_df_tsoff_a[tp_df_tsoff_a['channel'].isin(planes.get(2, {}))]
-            tp_df_aO = tp_df_tsoff_a[tp_df_tsoff_a['channel'].isin(planes.get(9999, {}))]
-            rich.print(tp_df_aU)
-            rich.print(tp_df_aV)
-            rich.print(tp_df_aZ)
-            rich.print(tp_df_aO)
+            # tp_df_aO = tp_df_tsoff_a[tp_df_tsoff_a['channel'].isin(planes.get(9999, {}))]
+            # rich.print(f"--- U plane "+"-"*50)
+            # rich.print(tp_df_aU)
+            # rich.print(f"--- V plane "+"-"*50)
+            # rich.print(tp_df_aV)
+            # rich.print(f"--- Z plane "+"-"*50)
+            # rich.print(tp_df_aZ)
+            # rich.print(f"--- 0 plane "+"-"*50)
+            # rich.print(tp_df_aO)
 
             fig_w, fig_h = 1500, 1000
 
@@ -531,8 +554,8 @@ def attach(app: Dash, engine) -> None:
             xmax_V = max(planes.get(1,{}))
             xmin_Z = min(planes.get(2,{}))
             xmax_Z = max(planes.get(2,{}))
-            xmin_O = min(planes.get(9999,{}))
-            xmax_O = max(planes.get(9999,{}))
+            # xmin_O = min(planes.get(9999,{}))
+            # xmax_O = max(planes.get(9999,{}))
 
             def make_tp_plot(df, xmin, xmax, cmin, cmax, fig_w, fig_h):
                 if not df.empty:
@@ -546,10 +569,13 @@ def attach(app: Dash, engine) -> None:
                         x_title="offline channel",
                         y_title="time ticks",
                     )
+
                     fig.add_trace(
                         go.Scattergl(
+                            name='ADC peak',
                             x=df['channel'],
                             y=df['time_peak'],
+                            text=[ f'adc_peak: {p}' for p in df['adc_peak']],
                             mode='markers', 
                             marker=dict(
                                 size=16,
@@ -560,12 +586,15 @@ def attach(app: Dash, engine) -> None:
                                 showscale=True
                                 ),
                             ),
-                            row=1, col=1
+                            row=1, col=1,
                         )
-                    rich.print(df['channel'])
                     fig.add_trace(
-                        go.Histogram(x=df['channel'], name='channel', nbinsx=(xmax-xmin)), 
-                        row=2, col=1
+                        go.Histogram(
+                            name='channel occupancy',
+                            x=df['channel'],
+                            nbinsx=(xmax-xmin)
+                        ), 
+                        row=2, col=1,
                     )
 
 
@@ -626,17 +655,17 @@ def attach(app: Dash, engine) -> None:
             ]
 
 
-            fig = make_tp_plot(tp_df_aO, xmin_O, xmax_O, fzmin, fzmax, fig_w, fig_h)
-            children += [
-                        html.B("TPs: Others"),
-                        html.Hr(),
-                        dcc.Graph(figure=fig),
-            ]
+            # fig = make_tp_plot(tp_df_aO, xmin_O, xmax_O, fzmin, fzmax, fig_w, fig_h)
+            # children += [
+            #             html.B("TPs: Others"),
+            #             html.Hr(),
+            #             dcc.Graph(figure=fig),
+            # ]
 
 
         # Trigger Record Displays
         fig_w, fig_h = 1500, 1000
-        fzmin, fzmax = tr_color_range
+        fzmin, fzmax = adc_color_range
         # Waveforms A
         if 'RAW_ADC' in adcmap_selection:
             fig = make_static_img(df_aZ, zmin=fzmin, zmax=fzmax, palette=tr_color_palette, title=f"Z-plane, A - A: Run {info_a['run_number']}: {info_a['trigger_number']}")
@@ -725,7 +754,7 @@ def attach(app: Dash, engine) -> None:
                     chans = list(set(p_chans) & set(f_chans))
                     df_a_cnr[chans] = df_a_cnr[chans].sub(df_a_cnr[chans].mean(axis=1), axis=0)
 
-            fzmin, fzmax = tr_color_range
+            fzmin, fzmax = adc_color_range
             plot_title=f"Z-plane, A (CNR) - A: Run {info_a['run_number']}: {info_a['trigger_number']}"
             if plot_two_plots:
                 plot_title += f", B: Run {info_b['run_number']}: {info_b['trigger_number']}"
