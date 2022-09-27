@@ -4,7 +4,7 @@ import rich
 import logging
 import os.path
 import sys
-from justintime.cruncher.datamanager import RawDataManager
+from justintime.cruncher.datamanager import DataManager
 
 
 
@@ -19,7 +19,7 @@ def main(file_path, trig_rec=None):
     # trg_ref = 1
     # raw_path_ref = '/data0/np02_bde_coldbox_run012081_0000_20211110T094009.hdf5.copied'
 
-    rdm = RawDataManager(os.path.dirname(file_path))
+    rdm = DataManager(os.path.dirname(file_path))
 
     if trig_rec is None:
         rich.print(rdm.get_trigger_record_list(file_path))

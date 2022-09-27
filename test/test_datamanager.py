@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from justintime.cruncher.datamanager import RawDataManager
+from justintime.cruncher.datamanager import DataManager
 import sys
 import rich
 import logging
@@ -20,8 +20,8 @@ def cli(interactive: bool, file_path: str) -> None:
     print(dp.name)
 
 
-    # rdm = RawDataManager(dp.parent, 'ProtoWIB', 'VDColdbox')
-    rdm = RawDataManager(dp.parent, 'WIB', 'HDColdbox')
+    # rdm = DataManager(dp.parent, 'ProtoWIB', 'VDColdbox')
+    rdm = DataManager(dp.parent, 'WIB', 'HDColdbox')
     data_files = sorted(rdm.list_files(), reverse=True)
     rich.print(data_files)
     f = dp.name

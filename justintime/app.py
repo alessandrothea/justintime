@@ -4,7 +4,7 @@ import logging
 import rich
 import click
 
-from .cruncher.datamanager import RawDataManager
+from .cruncher.datamanager import DataManager
 from .dashboard import init_app
 
 @click.command()
@@ -14,7 +14,7 @@ from .dashboard import init_app
 @click.argument('frame_type', type=click.Choice(['ProtoWIB', 'WIB']))
 def cli(raw_data_path :str, port: int, channel_map_id:str, frame_type: str):
 
-    rdm = RawDataManager(raw_data_path, frame_type, channel_map_id)
+    rdm = DataManager(raw_data_path, frame_type, channel_map_id)
     data_files = rdm.list_files()
     rich.print(data_files)
     app = init_app(rdm)

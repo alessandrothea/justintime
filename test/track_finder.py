@@ -3,7 +3,7 @@
 import rich
 import logging
 import pandas as pd
-from justintime.cruncher.datamanager import RawDataManager
+from justintime.cruncher.datamanager import DataManager
 import detchannelmaps
 from itertools import groupby
 
