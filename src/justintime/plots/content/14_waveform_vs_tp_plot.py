@@ -102,7 +102,7 @@ def init_callbacks(dash_app, storage, plot_id,theme):
 
 								fig=px.line(data.df_tsoff,y=channel_num)
 								if  "tp_overlay" in overlay_tps :
-									waveform_tps(data.tp_df_tsoff,channel_num)
+									waveform_tps(fig,data.tp_df_tsoff,channel_num)
 
 						
 
