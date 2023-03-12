@@ -37,7 +37,7 @@ def cli(file_path: str) -> None:
     rich.print(trl)
 
     rich.print(f"Reading trigger record {trl[0]}")
-    info, df = rdm.load_trigger_record(f, trl[0])
+    info, df = rdm.load_entry(f, trl[0])
     rich.print(info)
 
     rich.print(df)

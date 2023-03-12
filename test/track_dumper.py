@@ -25,8 +25,8 @@ def main(file_path, trig_rec=None):
         rich.print(rdm.get_trigger_record_list(file_path))
         return
 
-    info, df = rdm.load_trigger_record(os.path.basename(file_path), int(trig_rec))
-    # info_ref, df_ref = rdm.load_trigger_record(raw_path_ref, trg_ref)
+    info, df = rdm.load_entry(os.path.basename(file_path), int(trig_rec))
+    # info_ref, df_ref = rdm.load_entry(raw_path_ref, trg_ref)
 
 
     df.to_hdf(f"df_{trig_rec}_{os.path.basename(file_path)}", key='df')

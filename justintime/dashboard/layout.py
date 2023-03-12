@@ -50,11 +50,22 @@ def generate_control_card(brain):
     return html.Div(
         id="control-card",
         children=[
+            html.P("Partition A"),
+            dcc.Dropdown(
+                id="partition-select-A",
+                # multi=True,
+                options=[{'label': f, 'value':f} for f in sorted(brain.get_session_run_files_map(), reverse=True)]
+            ),
+            html.P("Run A"),
+            dcc.Dropdown(
+                id="run-select-A",
+                # multi=True,
+            ),
             html.P("Raw Data File A"),
             dcc.Dropdown(
                 id="raw-data-file-select-A",
                 # multi=True,
-                options=[{'label': f, 'value':f} for f in sorted(brain.list_files(), reverse=True)]
+                # options=[{'label': f, 'value':f} for f in sorted(brain.list_files(), reverse=True)]
             ),
             # html.Br(),
             html.P("Trigger Record A"),
@@ -68,10 +79,21 @@ def generate_control_card(brain):
                 options=[{'label': 'Raw Data File Reference', 'value': 'Y'}],
                 value=['N']
             ),
+            html.P("Partition B"),
+            dcc.Dropdown(
+                id="partition-select-B",
+                # multi=True,
+                options=[{'label': f, 'value':f} for f in sorted(brain.get_session_run_files_map(), reverse=True)]
+            ),
+            html.P("Run B"),
+            dcc.Dropdown(
+                id="run-select-B",
+                # multi=True,
+            ),
             dcc.Dropdown(
                 id="raw-data-file-select-B",
                 # multi=True,
-                options=[{'label': f, 'value':f} for f in sorted(brain.list_files(), reverse=True)]
+                # options=[{'label': f, 'value':f} for f in sorted(brain.list_files(), reverse=True)]
             ),
             # html.Br(),
             html.P("Trigger Record Reference"),

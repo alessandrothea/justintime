@@ -125,19 +125,45 @@ def make_static_img(df, zmin: int = None, zmax: int = None, palette:str = "Plasm
 
 def attach(app: Dash, engine) -> None:
 
+    # Refresh partitions
     @app.callback(
-        Output('raw-data-file-select-A', 'options'),
-        Output('raw-data-file-select-B', 'options'),
+        Output('partition-select-A', 'options'),
+        Output('partition-select-B', 'options'),
         Input('refresh_files', 'n_clicks')
     )
     def update_file_list(pathname):
         fl = sorted(engine.list_files(), reverse=True)
-        logging.debug(f"Updatd file list: {fl}")
-        opts = [{'label': f, 'value': f} for f in engine.list_files()]
+        logging.debug(f"Updated file list: {fl}")
+        opts = [{'label': f, 'value': f} for f in engine.get_session_run_files_map()]
         return (
             opts,
-            opts
+            opts,
         )
+
+    # Refresh run list
+    @app.callback(
+        Output('run-select-A', 'options'),
+        Input('partition-select-A', 'value')
+        )
+    def update_run_list(partition):
+        if not partition:
+            return []
+        files = engine.get_session_run_files_map()
+        opts = [{'label': f, 'value': f} for f in files[partition]]
+        return opts
+
+    # Refresh file list
+    @app.callback(
+        Output('raw-data-file-select-A', 'options'),
+        Input('run-select-A', 'value'),
+        State('partition-select-A', 'value')
+        )
+    def update_file_list(run, partition):
+        if not run or not partition:
+            return []
+        files = engine.get_session_run_files_map()
+        opts = [{'label': f, 'value': f} for f in files[partition][run]]
+        return opts
 
     @app.callback(
         Output("raw-data-file-select-B", 'disabled'),
@@ -218,16 +244,18 @@ def attach(app: Dash, engine) -> None:
 
 
         # Load records
-        info_a, df_a, tp_df_a = engine.load_entry(raw_data_file_a, int(trig_rec_num_a))
+        info_a, df_a, tp_df_a, _ = engine.load_entry(raw_data_file_a, int(trig_rec_num_a))
         print("Trigger record infos:", info_a)
         print("RAW data dataframe")
         print(df_a)
         print("TPs data dataframe")
         print(tp_df_a)
         # Timestamp information
-        tr_ts_sec_a = info_a['trigger_timestamp']*20/1000000000
-        dt_a = datetime.datetime.fromtimestamp(tr_ts_sec_a).strftime('%c')
-
+        tr_ts_sec_a = info_a['trigger_timestamp']*int(62e6) 
+        try:
+            dt_a = datetime.datetime.fromtimestamp(tr_ts_sec_a).strftime('%c')
+        except OverflowError:
+            dt_a = 'Invalid'
         # #----
         if plot_two_plots:
             info_b, df_b, tp_df_b = engine.load_entry(raw_data_file_b, int(trig_rec_num_b))
@@ -237,7 +265,7 @@ def attach(app: Dash, engine) -> None:
             print("TPs data dataframe")
             print(tp_df_b)
             # Timestamp information
-            ts_b = info_b['trigger_timestamp']*20/1000000000
+            ts_b = info_b['trigger_timestamp']*int(62e6) 
             dt_b = datetime.datetime.fromtimestamp(ts_b).strftime('%c')
 
 
@@ -529,14 +557,14 @@ def attach(app: Dash, engine) -> None:
             # rich.print(tp_df_a)
 
             tp_df_tsoff_a = tp_df_a.copy()
-            ts_min = tp_df_tsoff_a['time_start'].min()
-            tp_df_tsoff_a['time_peak'] = tp_df_tsoff_a['time_peak']-ts_min
-            tp_df_tsoff_a['time_start'] = tp_df_tsoff_a['time_start']-ts_min
+            ts_min = tp_df_tsoff_a['start_time'].min()
+            tp_df_tsoff_a['peak_time'] = tp_df_tsoff_a['peak_time']-ts_min
+            tp_df_tsoff_a['start_time'] = tp_df_tsoff_a['start_time']-ts_min
 
-            tp_df_aU = tp_df_tsoff_a[tp_df_tsoff_a['channel'].isin(planes.get(0, {}))]
-            tp_df_aV = tp_df_tsoff_a[tp_df_tsoff_a['channel'].isin(planes.get(1, {}))]
-            tp_df_aZ = tp_df_tsoff_a[tp_df_tsoff_a['channel'].isin(planes.get(2, {}))]
-            # tp_df_aO = tp_df_tsoff_a[tp_df_tsoff_a['channel'].isin(planes.get(9999, {}))]
+            tp_df_aU = tp_df_tsoff_a[tp_df_tsoff_a['offline_ch'].isin(planes.get(0, {}))]
+            tp_df_aV = tp_df_tsoff_a[tp_df_tsoff_a['offline_ch'].isin(planes.get(1, {}))]
+            tp_df_aZ = tp_df_tsoff_a[tp_df_tsoff_a['offline_ch'].isin(planes.get(2, {}))]
+            # tp_df_aO = tp_df_tsoff_a[tp_df_tsoff_a['offline_ch'].isin(planes.get(9999, {}))]
             # rich.print(f"--- U plane "+"-"*50)
             # rich.print(tp_df_aU)
             # rich.print(f"--- V plane "+"-"*50)
@@ -573,13 +601,13 @@ def attach(app: Dash, engine) -> None:
                     fig.add_trace(
                         go.Scattergl(
                             name='ADC peak',
-                            x=df['channel'],
-                            y=df['time_peak'],
-                            text=[ f'adc_peak: {p}' for p in df['adc_peak']],
+                            x=df['offline_ch'],
+                            y=df['peak_time'],
+                            text=[ f'peak_adc: {p}' for p in df['peak_adc']],
                             mode='markers', 
                             marker=dict(
                                 size=16,
-                                color=df['adc_peak'], #set color equal to a variable
+                                color=df['peak_adc'], #set color equal to a variable
                                 colorscale='Plasma', # one of plotly colorscales
                                 cmin = cmin,
                                 cmax = cmax,
@@ -591,14 +619,14 @@ def attach(app: Dash, engine) -> None:
                     fig.add_trace(
                         go.Histogram(
                             name='channel occupancy',
-                            x=df['channel'],
+                            x=df['offline_ch'],
                             nbinsx=(xmax-xmin)
                         ), 
                         row=2, col=1,
                     )
 
 
-                    # fig = px.scatter(df, x="channel", y="time", color='adc_peak')
+                    # fig = px.scatter(df, x="channel", y="time", color='peak_adc')
                     fig.update_xaxes(range=[xmin, xmax])
 
                 else:
@@ -625,7 +653,7 @@ def attach(app: Dash, engine) -> None:
                         dcc.Graph(figure=fig),
             ]
 
-            # fig = px.histogram(tp_df_aZ['channel'], x="channel")
+            # fig = px.histogram(tp_df_aZ['offline_ch'], x="channel")
             # fig.update_layout(
             #     xaxis=dict(range=[xmin_Z, xmax_Z]),
             #     xaxis_title="Offline Channel",
