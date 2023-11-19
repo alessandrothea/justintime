@@ -6,9 +6,11 @@ import logging
 import collections
 from .cruncher import signal
 
+from rawdatautils.unpack.dataclasses import dts_to_datetime
+
 class TriggerRecordCache:
     
-    max_cache_size = 100
+    max_cache_size = 10
     
     def __init__(self, engine):
         self.engine = engine
@@ -59,8 +61,51 @@ class TriggerRecordCache:
 class TriggerRecordData:
     
     def __init__(self, engine, trigger_record, raw_data_file):
-        self.engine = engine
-        self.info, self.df, self.tp_df, self.ta_df, self.tc_df = engine.load_entry(raw_data_file, int(trigger_record))
+        self.engine     = engine
+        self.df_dict    = engine.load_entry(raw_data_file, int(trigger_record))
+        self.keys       = self.df_dict.keys()
+        self.data_key   = f"detd_k{self.engine.det_name}_kWIBEth"
+        self.run        = self.df_dict["trh"].index[0][0].astype(float)
+        self.trigger    = self.df_dict["trh"].index[0][1].astype(float)
+        
+        indexies = np.array(self.df_dict["trh"].index[0]).astype(int)
+
+        print("\n"*5)
+        print(type(self.df_dict["trh"].index[0][0]))
+        print(self.df_dict["trh"].index[0][0])
+        print(self.df_dict["trh"].index[0][1])
+        print("\n"*5)
+        
+        self.run        = indexies[0]
+        self.trigger    = indexies[1]
+
+        logging.info(f"Trigger timestamp (ticks): {self.get_trigger_ts()}")
+        logging.info(f"Trigger timestamp (sec from epoc): {dts_to_datetime(self.get_trigger_ts()).strftime('%b-%d-%Y, %H:%M:%S')}")
+
+    def get_trigger_ts(self):
+        return self.df_dict['trh'].trigger_timestamp_dts.iloc[0]
+
+    def get_adcs_per_planes(self, key=None):
+        
+        if key is None:
+            return (self.df_dict[self.data_key].query("plane == 0"),
+                    self.df_dict[self.data_key].query("plane == 1"),
+                    self.df_dict[self.data_key].query("plane == 2"))
+        else:
+            return (self.df_dict[self.data_key].query("plane == 0")[key],
+                    self.df_dict[self.data_key].query("plane == 1")[key],
+                    self.df_dict[self.data_key].query("plane == 2")[key])
+
+
+
+
+
+
+
+
+
+        """
+        self.info, self.df, self.tp_df = engine.load_entry(raw_data_file, int(trigger_record)) #, self.ta_df, self.tc_df 
 
         self.tr_ts = self.info['trigger_timestamp']
         self.tr_ts_sec = self.tr_ts/int(62e6) 
@@ -170,9 +215,9 @@ class TriggerRecordData:
 
         # print(self.tp_df_Z)
 
+    """
 
-
-    def init_ta(self):
+    """def init_ta(self):
         self.ta_df_tsoff = self.ta_df.copy()
         for c in ('time_start', 'time_end', 'time_peak', 'time_activity'):
             self.ta_df_tsoff[c] = (self.ta_df_tsoff[c].astype('int64')-self.ts_off)
@@ -186,7 +231,8 @@ class TriggerRecordData:
         self.ta_df_V = self.ta_df_tsoff[self.ta_df_tsoff['plane'] == 1]
         self.ta_df_Z = self.ta_df_tsoff[self.ta_df_tsoff['plane'] == 2]
         self.ta_df_O = self.ta_df_tsoff[self.ta_df_tsoff['plane'] == 9999]
-
+        
+    """
     # def init_fft_phase_22(self):
     #     try: self.df_fft
     #     except AttributeError: self.df_fft = signal.calc_fft(self.df)
@@ -219,7 +265,7 @@ class TriggerRecordData:
     #         self.df_phase_430 = signal.calc_fft_phase(self.df_fft, fmin, fmax)
     #         self.df_phase_430['femb']  = self.df_phase_430.index.map(self.engine.femb_id_from_offch)
     #         self.df_phase_430['plane'] = self.df_phase_430.index.map(self.find_plane)
-
+    """
     def init_cnr(self):
         try: self.df_cnr
         except AttributeError: 
@@ -229,3 +275,4 @@ class TriggerRecordData:
                 for f,f_chans in self.engine.femb_to_offch.items():
                     chans = list(set(p_chans) & set(f_chans))
                     self.df_cnr[chans] = self.df_cnr[chans].sub(self.df_cnr[chans].mean(axis=1), axis=0)
+    """
