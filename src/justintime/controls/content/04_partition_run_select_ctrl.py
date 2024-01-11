@@ -45,14 +45,15 @@ def init_callbacks(dash_app, engine):
     @dash_app.callback(
         Output('partition_select_ctrl', 'options'),
         Output('partition_select_ctrl', 'value'),
-        Input('session_run_files_map', 'data')
+        Input('session_run_files_map', 'data'),
+        State('partition_select_ctrl', 'value')
         )
-    def update_file_list(data):
+    def update_file_list(data, old_value):
         logging.debug('Update_partition called')
         if not data:
             return {}
         opts = list(data.keys())
-        return (opts, None)
+        return (opts, old_value if old_value in opts else None)
 
 
     @dash_app.callback(

@@ -12,14 +12,23 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.argument('channel_map_id', type=click.Choice(['VDColdbox', 'ProtoDUNESP1', 'PD2HD', 'VST', 'FiftyL']))
 # @click.argument('frame_type', type=click.Choice(['ProtoWIB', 'WIB']))
-@click.option('-e', '--entry', 'entry', type=int, default=0)
+@click.option('-o', '--offset', 'offset', type=int, default=0)
+@click.option('-n', '--num-entries', 'num_entries', type=int, default=None)
 @click.option('-s', '--show', 'show', is_flag=True, default=False)
 @click.option('-i', '--interactive', is_flag=True, default=False)
+@click.option('-v', '--verbose', is_flag=True, default=False)
 @click.argument('file_path', type=click.Path(exists=True))
 
-def cli(channel_map_id: str, entry: int, show: bool, interactive: bool, file_path: str) -> None:
+def cli(channel_map_id: str, offset: int, num_entries: int, show: bool, interactive: bool, verbose: bool, file_path: str) -> None:
 
-    # channel_map_id += 'ChannelMap'
+    from rich.logging import RichHandler
+
+    logging.basicConfig(
+        level="WARN" if not verbose else "DEBUG",
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[RichHandler(rich_tracebacks=True)]
+    )
 
     dp = Path(file_path)
     rich.print("-"*80)
@@ -38,18 +47,13 @@ def cli(channel_map_id: str, entry: int, show: bool, interactive: bool, file_pat
 
 
     rich.print(f"Found Trigger Records: {trl}")
-
-    for i,tr in enumerate(trl):
+    i_trs = list(enumerate(trl))
+    i_trs = i_trs[offset:] if num_entries is None else i_trs[offset:offset+num_entries]
+    for i,tr in i_trs:
         rich.print(f"Reading entry {i}, TR {tr}")
         rich.print("-"*80)
 
         info, tpc_df, tp_df, ta_df, tc_df = rdm.load_entry(f, tr)
-        # import pandas as pd
-        # Permanently changes the pandas settings
-        # pd.set_option('display.max_rows', None)
-        # pd.set_option('display.max_columns', None)
-        # pd.set_option('display.width', None)
-        # pd.set_option('display.max_colwidth', None)
 
         if show:
             rich.print("-"*80)
@@ -64,12 +68,6 @@ def cli(channel_map_id: str, entry: int, show: bool, interactive: bool, file_pat
             rich.print(ta_df)
             rich.print("-"*80)
 
-        # rich.print(f"Trigger candidates {len(tc_df)}")
-        # rich.print(ta_df)
-        # rich.print(f"Trigger activities {len(ta_df)}")
-        # rich.print(tc_df)
-        # rich.print("-"*80)
-    
     if interactive:
         import IPython
         IPython.embed(colors="neutral")
@@ -77,13 +75,5 @@ def cli(channel_map_id: str, entry: int, show: bool, interactive: bool, file_pat
 
 
 if __name__ == "__main__":
-    from rich.logging import RichHandler
-
-    logging.basicConfig(
-        level="WARN",
-        format="%(message)s",
-        datefmt="[%X]",
-        handlers=[RichHandler(rich_tracebacks=True)]
-    )
 
     cli()

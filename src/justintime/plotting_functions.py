@@ -186,13 +186,29 @@ def make_tp_plot(df_tp, df_ta, xmin, xmax, cmin, cmax, fig_w, fig_h, info, orien
                 x=x,
                 mode='markers',name="Trigger Primitives",
                 marker=dict(
-                    size=10,
+                    size=df_tp["adc_integral"]*10,
+                    sizemode='area',
+                    sizeref=2.*max(df_tp['adc_integral'])/(12**2),
+                    sizemin=3,
                     color=df_tp['adc_peak'], #set color equal to a variable
                     colorscale='Plasma', # one of plotly colorscales
-                    cmin = cmin,
+                    # colorscale='delta', # one of plotly colorscales
+                    cmin = 0,
                     cmax = cmax,
-                    showscale=True
+                    showscale=True,
+                    colorbar=dict( x=1.12 )
                     ),
+                text=[
+                    f"""Trigger Primitive
+offline ch: {int(row['channel'])}
+start : {int(row['time_start'])}
+peak : {int(row['time_peak'])}
+end : {int(row['time_start']+row['time_over_threshold'])}
+tot : {int(row['time_over_threshold'])}
+sum adc : {int(row['adc_integral'])}
+peak adc : {int(row['adc_peak'])}""".replace('\n','<br>')
+                        for index, row in df_tp.iterrows()
+                    ],
                 ),
                 row=s_row, col=s_col
             )
@@ -203,28 +219,6 @@ def make_tp_plot(df_tp, df_ta, xmin, xmax, cmin, cmax, fig_w, fig_h, info, orien
                     t,
                     row=s_row, col=s_col
                 )
-            # for i, ta in df_ta.iterrows():
-            #     time_points = [
-            #                 ta['time_start'],
-            #                 ta['time_start'],
-            #                 ta['time_end'],
-            #                 ta['time_end'],
-            #                 ta['time_start']
-            #             ]
-            #     channel_points = [
-            #                 ta['channel_start'],
-            #                 ta['channel_end'],
-            #                 ta['channel_end'],
-            #                 ta['channel_start'],
-            #                 ta['channel_start']
-            #             ]
-            #     fig.add_trace(
-            #         go.Scatter(
-            #             x= channel_points if orientation == 'vertical' else time_points, 
-            #             y= time_points if orientation == 'vertical' else channel_points, 
-            #             fill="toself"
-            #         ),
-            #         row=s_row, col=s_col
 
             #     )
         fig.add_trace(
@@ -271,25 +265,30 @@ def make_tp_overlay(df, cmin, cmax, orientation):
         fig=go.Scattergl(
                 x=df[x_label],
                 y=df[y_label],
-                # error_x=dict(
-                #     type='data',
-                #     symmetric=False,
-                #     array=df['time_peak']-df["time_start"],
-                #     arrayminus=df["time_over_threshold"]-(df['time_peak']-df["time_start"])
-                # ),
+
                 mode='markers', name="Trigger Primitives",
                 
-                marker=dict(size=df["adc_integral"],
+                marker=dict(
+                    size=df["adc_integral"],
                     sizemode='area',
-                    sizeref=2.*max(df['adc_integral'])/(12**2),sizemin=3,
+                    sizeref=2.*max(df['adc_integral'])/(12**2),
+                    sizemin=3,
                     color=df['adc_peak'], #set color equal to a variable
                     colorscale="delta", # one of plotly colorscales
                     cmin = 0,
                     cmax = cmax,
-                    showscale=True,colorbar=dict( x=1.12 )
+                    showscale=True,
+                    colorbar=dict( x=1.12 )
                     ),
                 text=[
-                    f"start : {row['time_start']}<br>peak : {row['time_peak']}<br>end : {row['time_start']+row['time_over_threshold']}<br>tot : {row['time_over_threshold']}<br>offline ch: {row['channel']}<br>sum adc : {row['adc_integral']}<br>peak adc : {row['adc_peak']}"
+                    f"""Trigger Primitive<br>
+offline ch: {row['channel']}<br>
+start : {row['time_start']}<br>
+peak : {row['time_peak']}<br>
+end : {row['time_start']+row['time_over_threshold']}<br>
+tot : {row['time_over_threshold']}<br>
+sum adc : {row['adc_integral']}<br>
+peak adc : {row['adc_peak']}"""
                         for index, row in df.iterrows()
                     ],
                 )   
@@ -305,15 +304,15 @@ def make_ta_overlay(df_tas, cmin, cmax, orientation):
     border_channel = 0.5
     for i, ta in df_tas.iterrows():
 
-        text=f"""
-start : {ta['time_start']}
-peak : {ta['time_peak']}
-end : {ta['time_end']}
-ch_start : {ta['channel_start']}
-ch_peak: {ta['channel_peak']}
-ch_end : {ta['channel_end']}
-peak adc : {ta['adc_peak']}
-adc_integral : {ta['adc_integral']}
+        text=f"""Trigger Activty [{i}]
+ch_start : {int(ta['channel_start'])}
+ch_peak: {int(ta['channel_peak'])}
+ch_end : {int(ta['channel_end'])}
+start : {int(ta['time_start'])}
+peak : {int(ta['time_peak'])}
+end : {int(ta['time_end'])}
+peak adc : {int(ta['adc_peak'])}
+adc_integral : {int(ta['adc_integral'])}
 """.replace('\n','<br>')
 
 
@@ -338,29 +337,7 @@ adc_integral : {ta['adc_integral']}
             x=time_points
             y=channel_points
 
-        # if orientation == 'vertical':
-        #     y0=ta['time_start']
-        #     y1=ta['time_end']
-        #     x0=ta['channel_start']
-        #     x1=ta['channel_end']            
-        # else:
-        #     x0=ta['time_start']
-        #     x1=ta['time_end']
-        #     y0=ta['channel_start']
-        #     y1=ta['channel_end']
-
         traces.append(
-            # go.layout.Shape(
-            #         type="rect",
-            #         x0=x0, y0=y0, x1=x1, y1=y1,
-            #         line=dict(
-            #             color="RoyalBlue",
-            #             width=2,
-            #         ),
-            #         fillcolor="LightSkyBlue",
-            #         opacity=0.5,
-            #         layer='below'
-            #     )
 
             go.Scatter(
                 name=f"ta[{i}]",

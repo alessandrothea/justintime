@@ -72,17 +72,23 @@ class TriggerRecordData:
             self.tr_ts_date = 'Invalid'
         logging.info(f"Trigger date: {self.tr_ts_date}")
 
+        match self.info['record_type']:
+            case 'TriggerRecord':
+                self.ts_min = self.df.index.min()
+                self.ts_max = self.df.index.max()
 
-        self.ts_min = self.df.index.min()
-        self.ts_max = self.df.index.max()
+                if self.tr_ts != 0xffffffffffffffff:
+                    self.ts_off = self.tr_ts 
+                else:
+                    logging.warning("Invalid trigger TS detected!!!")
+                    logging.info("Using tmax-tmin as trigger timestamp")
+                    self.ts_off = int((self.ts_max+self.ts_min)//2)
 
-        if self.tr_ts != 0xffffffffffffffff:
-            self.ts_off = self.tr_ts 
-        else:
-            logging.warning("Invalid trigger TS detected!!!")
-            logging.info("Using tmax-tmin as trigger timestamp")
-            self.ts_off = int((self.ts_max+self.ts_min)//2)
-            
+            case 'TimeSlice':
+                self.ts_min = self.tp_df['time_start'].min()
+                self.ts_max = self.tp_df['time_start'].max()
+                self.ts_off = self.ts_min
+        
         logging.info(f"Timestamp offset: {self.ts_off}")
 
         self.df_tsoff = self.df.copy()    
@@ -153,6 +159,7 @@ class TriggerRecordData:
     
 
     def init_tp(self):
+
         self.tp_df_tsoff = self.tp_df.copy()
         self.tp_df_tsoff['time_peak'] = (self.tp_df_tsoff['time_peak'].astype('int64')-self.ts_off)
         self.tp_df_tsoff['time_start'] = (self.tp_df_tsoff['time_start'].astype('int64')-self.ts_off)

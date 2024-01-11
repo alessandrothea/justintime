@@ -42,7 +42,7 @@ def init_callbacks(dash_app, storage, plot_id,theme):
      
         State(plot_id, "children")
     )
-    def plot_home_info(n_clicks,refresh, trigger_record,partition,run,raw_data_file ,original_state):
+    def plot_home_info(n_clicks, refresh, trigger_record, partition, run, raw_data_file ,original_state):
 
         load_figure_template(theme)
 
@@ -111,7 +111,7 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                                 ])
                 
                         return(html.Div([
-                                selection_line(partition,run,raw_data_file, trigger_record),
+                                selection_line(partition, run, raw_data_file, trigger_record),
                                 #html.Hr(),
                                 html.Div(children)
                                 ]))

@@ -207,52 +207,31 @@ class DataManager:
 
         file_path = os.path.join(self.data_path, file_name)
         rdf = hdf5libs.HDF5RawDataFile(file_path) # number of events = 10000 is not used
-            
-        # Check if we're dealing with tr ot ts
-        has_trs = False
-        try:
-            _ = rdf.get_all_trigger_record_ids()
-            has_trs = True
-        except:
-            pass
+    
+        record_type = rdf.get_record_type()
+        match record_type:
+            case 'TriggerRecord':
+                en_hdr = rdf.get_trh((entry,0))
+                en_info = {
+                    'record_type': record_type,
+                    'run_number': en_hdr.get_run_number(),
+                    'trigger_number': en_hdr.get_trigger_number(),
+                    'trigger_timestamp': en_hdr.get_trigger_timestamp(),
+                }
+                en_ts = en_hdr.get_trigger_timestamp()
 
-        has_tss = False
-        try:
-            _ = rdf.get_all_timeslice_ids()
-            has_tss = True
-        except:
-            pass
-
-        #----
-
-        if has_trs:
-            logging.debug(f"Trigger Records detected!")
-            get_entry_hdr = rdf.get_trh
-        elif has_tss:
-            logging.debug(f"TimeSlices detected!")
-            get_entry_hdr = rdf.get_tsh
-
-        else:
-            raise RuntimeError(f"No TriggerRecords nor TimeSlices found in {file_name}")
-
-        en_hdr = get_entry_hdr((entry,0))
-        # en_source_ids = rdf.get_source_ids((entry, 0))
-
-        if has_trs:
-            en_info = {
-                'run_number': en_hdr.get_run_number(),
-                'trigger_number': en_hdr.get_trigger_number(),
-                'trigger_timestamp': en_hdr.get_trigger_timestamp(),
-            }
-            en_ts = en_hdr.get_trigger_timestamp()
-
-        elif has_tss:
-            en_info = {
-                'run_number': en_hdr.run_number,
-                'trigger_number': en_hdr.timeslice_number,
-                'trigger_timestamp': 0,
-            }
-            en_ts = 0
+            case 'TimeSlice':
+                en_hdr = rdf.get_tsh((entry,0))
+                en_info = {
+                    'record_type': record_type,
+                    'run_number': en_hdr.run_number,
+                    'trigger_number': en_hdr.timeslice_number,
+                    'trigger_timestamp': 0,
+                }
+                en_ts = 0
+            case _:
+                logging.error(f'Record type {record_type} not known')
+                return {}      
 
         logging.info(en_info)
 

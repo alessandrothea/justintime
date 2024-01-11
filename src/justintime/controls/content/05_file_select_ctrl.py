@@ -32,7 +32,6 @@ def init_callbacks(dash_app, engine):
         Output('file_select_ctrl', 'options'),
         Input('run_storage_id', 'data')
         )
-    
     def update_select(stored_value):
 
         if not stored_value:

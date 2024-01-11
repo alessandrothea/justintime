@@ -68,15 +68,9 @@ def init_callbacks(dash_app, storage, plot_id, engine,theme):
                     data.init_tp()
                     data.init_ta()
                     fzmin, fzmax = tr_color_range
-                    fig_w, fig_h = 2600, 600
+                    fig_w, fig_h = 2600, height
                     children = []
                     if not data.tp_df.empty:
-                        # logging.info("TPs for Z plane:")
-                        # logging.info(data.tp_df_Z)
-                        # logging.info("TPs for V plane:")
-                        # logging.info(data.tp_df_V)
-                        # logging.info("TPs for U plane:")
-                        # logging.info(data.tp_df_U)
                         
                         if "density_plot" in density:
                             logging.info("2D Density plot chosen")

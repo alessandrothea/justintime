@@ -315,7 +315,6 @@ adc: [
 
     def unpack(self, frag):
 
-        # self.test_wrapper(frag)
         data_size = frag.get_data_size()
 
         offset=0
@@ -474,12 +473,42 @@ class UnpackerService:
 
     def unpack(self, raw_data_file, tr_id: int, seq_id: int=0) -> dict:
 
-        res = {}
 
+        match raw_data_file.get_record_type():
+            case 'TriggerRecord':
+                return self.unpack_tr(raw_data_file, tr_id, seq_id);
+            case 'TimeSlice':
+                return self.unpack_ts(raw_data_file, tr_id, seq_id);    
+            case other:
+                logging.error(f'Record type {other} not known')
+                return {}                
+
+    def unpack_tr(self, raw_data_file, tr_id: int, seq_id: int=0) -> dict:
+        res = {}
         trh = raw_data_file.get_trh((tr_id, seq_id))
         tr_source_ids = raw_data_file.get_source_ids((tr_id, seq_id))
 
         for sid in tr_source_ids:
+            frag = raw_data_file.get_frag((tr_id, seq_id),sid)
+
+            for n,up in self.fragment_unpackers.items():
+                if not up.match(frag.get_fragment_type(), sid.subsystem):
+                    # logging.debug(f"fragment {sid} (type {frag.get_fragment_type()}) and unpacker {n} - no match")
+                    continue
+                
+                logging.debug(f"[{n}] Unpacking Subsys={sid.subsystem}, id={sid.id}")                
+                r = up.unpack(frag)
+                logging.debug(f"[{n}] Unpacking Subsys={sid.subsystem}, id={sid.id} completed ({len(r) if r is not None else 0})")
+                res.setdefault(n,{})[sid.id] = r
+
+        return res
+
+    def unpack_ts(self, raw_data_file, tr_id: int, seq_id: int=0) -> dict:
+        res = {}
+        tsh = raw_data_file.get_tsh((tr_id, seq_id))
+        ts_source_ids = raw_data_file.get_source_ids((tr_id, seq_id))
+
+        for sid in ts_source_ids:
             frag = raw_data_file.get_frag((tr_id, seq_id),sid)
 
             for n,up in self.fragment_unpackers.items():
