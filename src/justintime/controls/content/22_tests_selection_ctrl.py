@@ -8,7 +8,7 @@ def return_obj(dash_app, engine, storage):
     comp_id = "tests_selection_item_comp"
 
     ctrl_div = html.Div([
-        dcc.Checklist(["WIB Pulser", "PDS"], ["WIB Pulser"], id=comp_id, inline=True)
+        dcc.Checklist(["WIB Pulser", "PDS"], ["WIB Pulser", "PDS"], id=comp_id, inline=True)
     ], id = ctrl_id)
 
     ctrl = ctrl_class.ctrl("tests_selection", ctrl_id, ctrl_div, engine)

@@ -21,7 +21,7 @@ def return_obj(dash_app, engine, storage,theme):
     plot.add_ctrl("partition_select_ctrl")
     plot.add_ctrl("run_select_ctrl")
     plot.add_ctrl("06_trigger_record_select_ctrl")
-    plot.add_ctrl("21_tp_multiplicity_ctrl")
+    #plot.add_ctrl("21_tp_multiplicity_ctrl")
     plot.add_ctrl("90_plot_button_ctrl")
 
     init_callbacks(dash_app, storage, plot_id,theme)
@@ -37,10 +37,10 @@ def init_callbacks(dash_app, storage, plot_id,theme):
         State("partition_select_ctrl","value"),
         State("run_select_ctrl","value"),
         State('file_select_ctrl', "value"),
-        State("21_tp_multiplicity_ctrl","value"),
+        #State("21_tp_multiplicity_ctrl","value"),
         State(plot_id, "children")
     )
-    def plot_mean_graph(n_clicks,refresh, trigger_record,partition,run,raw_data_file, tps ,original_state):
+    def plot_mean_graph(n_clicks,refresh, trigger_record,partition,run,raw_data_file,original_state):
 
         load_figure_template(theme)
         if trigger_record and raw_data_file:
@@ -55,10 +55,14 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                     logging.info(data.df_dict)
 
                     if data.df_dict["trh"].size != 0:
-
-                        data_U, data_V, data_Z = data.get_adcs_per_planes()
-                        data_U_mean, data_V_mean, data_Z_mean = data.get_adcs_per_planes("adc_mean")
-
+                        
+                        try:
+                            data_U, data_V, data_Z = data.get_adcs_per_planes()
+                            data_U_mean, data_V_mean, data_Z_mean = data.get_adcs_per_planes("adc_mean")
+                        except KeyError:
+                            return( html.Div([html.H6("No relevant TPC data found"),
+                                              html.H6(nothing_to_plot())]))
+                        
                         logging.info("Dataframe in Z-Plane:")
                         logging.info(data_Z)
                         logging.info("Dataframe in V-Plane:")

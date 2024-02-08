@@ -201,9 +201,9 @@ class DataManager:
         uid = (file_name, entry)
         if uid in self.cache:
             logging.info(f"{file_name}:{entry} already loaded. returning cached dataframe")
-            en_info, tpc_df, tp_df, ta_df, tc_df = self.cache[uid]
+            en_info, tpc_df, tp_df = self.cache[uid] # , ta_df, tc_df 
             self.cache.move_to_end(uid, False)
-            return en_info, tpc_df, tp_df, ta_df, tc_df
+            return en_info, tpc_df, tp_df #, ta_df, tc_df
 
         file_path = os.path.join(self.data_path, file_name)
         rdf = hdf5libs.HDF5RawDataFile(file_path) # number of events = 10000 is not used
@@ -259,8 +259,8 @@ class DataManager:
         wf_up = rdu.WIBFragmentUnpacker(self.ch_map)
         wethf_up = rdu.WIBEthFragmentPandasUnpacker(self.ch_map)
         tp_up = rdu.TPFragmentPandasUnpacker(self.ch_map)
-        ta_up = rdu.TAFragmentPandasUnpacker(self.ch_map)
-        tc_up = rdu.TCFragmentPandasUnpacker()
+        #ta_up = rdu.TAFragmentPandasUnpacker(self.ch_map)
+        #tc_up = rdu.TCFragmentPandasUnpacker()
 
         logging.debug("Upackers created")
 
@@ -270,8 +270,8 @@ class DataManager:
         up.add_unpacker('bde_eth', wethf_up)
         up.add_unpacker('bde_flx', wf_up)
         up.add_unpacker('tp', tp_up)
-        up.add_unpacker('ta', ta_up)
-        up.add_unpacker('tc', tc_up)
+        #up.add_unpacker('ta', ta_up)
+        #up.add_unpacker('tc', tc_up)
 
         # up.add_unpacker('pds', daphne_up)
         logging.debug("Upackers added")
@@ -316,7 +316,7 @@ class DataManager:
             tp_df = up.get_unpacker('tp').empty()
 
         # Assembling TPC-TP dataframes
-        if 'ta' in unpacked_tr:
+        """if 'ta' in unpacked_tr:
             logging.debug("Assembling TAs")
             ta_df = pd.concat(unpacked_tr['ta'].values())
             ta_df = ta_df.sort_values(by=['time_start', 'channel_start'])
@@ -334,12 +334,15 @@ class DataManager:
             # tc_df.drop_duplicates()
             logging.debug(f"TCs dataframe assembled {len(tc_df)}")
         else:
-            tc_df = up.get_unpacker('tc').empty()
+            tc_df = up.get_unpacker('tc').empty()"""
 
-        self.cache[uid] = (en_info, tpc_df, tp_df, ta_df, tc_df)
+        self.cache[uid] = (en_info, tpc_df, tp_df) #, ta_df, tc_df
         if len(self.cache) > self.max_cache_size:
             old_uid, _ = self.cache.popitem(False)
             logging.info(f"Removing {old_uid[0]}:{old_uid[1]} from cache")
 
-        return en_info, tpc_df, tp_df, ta_df, tc_df
+        return en_info, tpc_df, tp_df #, ta_df, tc_df
 
+
+#class DataHandler(DataManager):
+    

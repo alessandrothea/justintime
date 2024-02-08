@@ -21,7 +21,7 @@ def return_obj(dash_app, engine, storage,theme):
     plot.add_ctrl("partition_select_ctrl")
     plot.add_ctrl("run_select_ctrl")
     plot.add_ctrl("06_trigger_record_select_ctrl")
-    plot.add_ctrl("21_tp_multiplicity_ctrl")
+    #plot.add_ctrl("21_tp_multiplicity_ctrl")
     plot.add_ctrl("90_plot_button_ctrl")
 
     init_callbacks(dash_app, storage, plot_id,theme)
@@ -37,10 +37,10 @@ def init_callbacks(dash_app, storage, plot_id,theme):
         State("run_select_ctrl","value"),
         State('trigger_record_select_ctrl', "value"),
         State('file_select_ctrl', "value"),
-        State("21_tp_multiplicity_ctrl","value"),
+        #State("21_tp_multiplicity_ctrl","value"),
         State(plot_id, "children")
     )
-    def plot_std_graph(n_clicks,refresh, partition,run,trigger_record, raw_data_file, tps,original_state):
+    def plot_std_graph(n_clicks,refresh, partition,run,trigger_record, raw_data_file,original_state):
 
         load_figure_template(theme)
         if trigger_record and raw_data_file:
@@ -49,8 +49,12 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                 except RuntimeError: return(html.Div(""))
                 
                 if data.df_dict["trh"].size != 0:
-
-                    data_U_std, data_V_std, data_Z_std = data.get_adcs_per_planes("adc_rms")
+                        
+                    try:
+                        data_U_std, data_V_std, data_Z_std = data.get_adcs_per_planes("adc_rms")
+                    except KeyError:
+                        return( html.Div([html.H6("No relevant TPC data found"),
+                                            html.H6(nothing_to_plot())]))
 
                     logging.info("STD Z-Plane")
                     logging.info(data_Z_std)

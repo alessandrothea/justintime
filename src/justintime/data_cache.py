@@ -64,37 +64,54 @@ class TriggerRecordData:
         self.engine     = engine
         self.df_dict    = engine.load_entry(raw_data_file, int(trigger_record))
         self.keys       = self.df_dict.keys()
-        self.data_key   = f"detd_k{self.engine.det_name}_kWIBEth"
         self.run        = self.df_dict["trh"].index[0][0].astype(float)
         self.trigger    = self.df_dict["trh"].index[0][1].astype(float)
+
+        self.tpc_datkey     = f"detd_k{self.engine.det_name}_kWIBEth"
+        self.pds_datkey     = f"detd_kHD_PDS_kDAPHNE"
+        self.pdss_datkey    = f"detd_kHD_PDS_kDAPHNEStream"
         
         indexies = np.array(self.df_dict["trh"].index[0]).astype(int)
-
-        print("\n"*5)
-        print(type(self.df_dict["trh"].index[0][0]))
-        print(self.df_dict["trh"].index[0][0])
-        print(self.df_dict["trh"].index[0][1])
-        print("\n"*5)
         
         self.run        = indexies[0]
         self.trigger    = indexies[1]
-
+        #self.seq       = indexies[2]
+        
         logging.info(f"Trigger timestamp (ticks): {self.get_trigger_ts()}")
         logging.info(f"Trigger timestamp (sec from epoc): {dts_to_datetime(self.get_trigger_ts()).strftime('%b-%d-%Y, %H:%M:%S')}")
 
     def get_trigger_ts(self):
         return self.df_dict['trh'].trigger_timestamp_dts.iloc[0]
 
+    def get_df(self, data_key):
+        return self.df_dict[self.data_key]
+
     def get_adcs_per_planes(self, key=None):
+        """
+        TPC planes map:     
+            0   : U;
+            1   : V;
+            2   : Z.
+        """
+        if key is None:
+            return (self.df_dict[self.tpc_datkey].query("plane == 0"),
+                    self.df_dict[self.tpc_datkey].query("plane == 1"),
+                    self.df_dict[self.tpc_datkey].query("plane == 2"))
+        else:
+            return (self.df_dict[self.tpc_datkey].query("plane == 0")[key],
+                    self.df_dict[self.tpc_datkey].query("plane == 1")[key],
+                    self.df_dict[self.tpc_datkey].query("plane == 2")[key])
+        
+    def get_pds_adcs_per_link(self, key=None):
         
         if key is None:
-            return (self.df_dict[self.data_key].query("plane == 0"),
-                    self.df_dict[self.data_key].query("plane == 1"),
-                    self.df_dict[self.data_key].query("plane == 2"))
+            return (self.df_dict[self.pdss_datkey],
+                    self.df_dict[self.pdss_datkey],
+                    self.df_dict[self.pdss_datkey])
         else:
-            return (self.df_dict[self.data_key].query("plane == 0")[key],
-                    self.df_dict[self.data_key].query("plane == 1")[key],
-                    self.df_dict[self.data_key].query("plane == 2")[key])
+            return (self.df_dict[self.pdss_datkey].query("src_id < 4")[key],
+                    self.df_dict[self.pdss_datkey].query("src_id in [4, 5, 6, 8]")[key],
+                    self.df_dict[self.pdss_datkey].query("src_id in [7, 9]")[key])
 
 
 
