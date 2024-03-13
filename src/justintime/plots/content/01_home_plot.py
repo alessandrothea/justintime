@@ -82,7 +82,7 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                         """
                         Register all TPC related tests
                         """
-                        dqm_test_suite = DQMTestSuite()
+                        dqm_test_suite = DQMTestSuite(name="WIBTests")
                         dqm_test_suite.register_test(CheckAllExpectedFragmentsTest())
                         dqm_test_suite.register_test(CheckNFrames_WIBEth())
                         dqm_test_suite.register_test(CheckTimestampDiffs_WIBEth(tpc_det_name))
@@ -102,21 +102,35 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                         """
                         Register all DAPHNE related tests
                         """
-                        dqm_test_suite_daphne = DQMTestSuite()
+                        dqm_test_suite_daphne = DQMTestSuite(name="DAPHNETests")
                         dqm_test_suite_daphne.register_test(CheckTimestampsAligned(2),"CheckTimestampsAligned_PDS")
                         dqm_test_suite_daphne.register_test(CheckEmptyFragments_DAPHNE(), "CheckEmptyFragments_DAPHNE")
                         dqm_test_suite_daphne.register_test(CheckTimestampDiffs_DAPHNE())
                         dqm_test_suite_daphne.register_test(CheckADCData_DAPHNE())
 
 
-                        dqm_test_suite.do_all_tests(data.df_dict)
-                        dqm_test_suite_daphne.do_all_tests(data.df_dict)
+                        dqm_test_suite.run_test(data.df_dict)
+                        dqm_test_suite_daphne.run_test(data.df_dict)
 
-                        results_tpc = dqm_test_suite.get_results_in_str()
-                        results_dph = dqm_test_suite_daphne.get_results_in_str()
-                        print(results_tpc.columns)
-                        print(results_dph)
+                        results_tpc = dqm_test_suite.get_latest_results().astype(str)[["result","message","name"]]
+                        results_dph = dqm_test_suite_daphne.get_latest_results().astype(str)[["result","message","name"]]
+                        #results_tpc["result"] = results_tpc["result"][14:]
+                        #results_dph["result"] = results_tpc["result"][14:]
 
+                        mystyle_data_conditional=[
+                                        {'if': {'filter_query': '{{result}} contains {}'.format("OK")},
+                                        'backgroundColor': 'rgb(179, 226, 205)'},
+                                        {'if': {'filter_query': '{{result}} contains {}'.format("WARNING")},
+                                        'backgroundColor': 'rgb(253,244,152)'},
+                                        {'if': {'filter_query': '{{result}} contains {}'.format("BAD")},
+                                        'backgroundColor': 'rgb(251,180,174)'},
+                                        {'if': {'filter_query': '{{result}} contains {}'.format("INVALID")},
+                                        'backgroundColor': 'rgb(251,180,174)'},
+                                        {'if': {'column_id':'{name}'},
+                                         'minWidth': '120px', 'width': '120px', 'maxWidth': '120px',
+                                         'font-family':'Open Sans'}
+                            ]
+                        
                         children_tpc=([dash_table.DataTable(
                                     id='table_tpc',
                                     columns=[{"name": i, "id": i} for i in results_tpc.columns],
@@ -125,20 +139,7 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                                     style_cell={'textAlign': 'left', 'height': 'auto',
                                                 'minWidth': '80px', 'width': '100px', 'maxWidth': '120px',
                                                 'whiteSpace': 'normal'},
-                                    style_data_conditional=[
-                                        {'if': {'filter_query': '{{Result}} contains {}'.format("OK"),
-                                                'column_id': 'Result'},
-                                        'backgroundColor': 'rgb(179, 226, 205)'},
-                                        {'if': {'filter_query': '{{Result}} contains {}'.format("WARNING"),
-                                                'column_id': 'Result'},
-                                        'backgroundColor': 'rgb(253,244,152)'},
-                                        {'if': {'filter_query': '{{Result}} contains {}'.format("BAD"),
-                                                'column_id': 'Result'},
-                                        'backgroundColor': 'rgb(251,180,174)'},
-                                        {'if': {'column_id':'{Name}'},
-                                         'minWidth': '120px', 'width': '120px', 'maxWidth': '120px',
-                                         'font-family':'Open Sans'}
-                                        ]
+                                    style_data_conditional=mystyle_data_conditional
                                     )])
                         children_dph=([ dash_table.DataTable(
                                     id='table_dph',
@@ -148,20 +149,7 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                                     style_cell={'textAlign': 'left', 'height': 'auto',
                                                 'minWidth': '80px', 'width': '100px', 'maxWidth': '120px',
                                                 'whiteSpace': 'normal'},
-                                    style_data_conditional=[
-                                        {'if': {'filter_query': '{{Result}} contains {}'.format("OK"),
-                                                'column_id': 'Result'},
-                                        'backgroundColor': 'rgb(179, 226, 205)'},
-                                        {'if': {'filter_query': '{{Result}} contains {}'.format("WARNING"),
-                                                'column_id': 'Result'},
-                                        'backgroundColor': 'rgb(253,244,152)'},
-                                        {'if': {'filter_query': '{{Result}} contains {}'.format("BAD"),
-                                                'column_id': 'Result'},
-                                        'backgroundColor': 'rgb(251,180,174)'},
-                                        {'if': {'column_id':'{Name}'},
-                                         'minWidth': '120px', 'width': '120px', 'maxWidth': '120px',
-                                         'font-family':'Open Sans'}
-                                        ]
+                                    style_data_conditional=mystyle_data_conditional
                                     )]
                                 )
   
