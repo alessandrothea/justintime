@@ -9,7 +9,7 @@ from rich.logging import RichHandler
 
 # just in time  imports
 from . import load_all as ld
-from .cruncher.datamanager import DataManager
+from .cruncher.filehandle import FileHandle
 from .navbar import create_navbar
 #from header import create_header
 from .data_cache import TriggerRecordCache
@@ -38,7 +38,7 @@ def main(verbose: bool, raw_data_path: str, port: int, channel_map_id: str, temp
 
 
 def init_dashboard(dash_app, raw_data_path, channel_map_id,template):
-    engine = DataManager(raw_data_path, channel_map_id)
+    engine = FileHandle(raw_data_path, channel_map_id)
 
     data_files = engine.list_files()
     logging.debug(data_files)
