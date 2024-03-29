@@ -30,15 +30,17 @@ def init_callbacks(dash_app, engine):
 
     @dash_app.callback(
         Output('file_select_ctrl', 'options'),
-        Input('run_storage_id', 'data')
+        Output('file_select_ctrl', 'value'),
+        Input('run_storage_id', 'data'),
+        State('file_select_ctrl', 'value')
         )
     
-    def update_select(stored_value):
+    def update_select(stored_value, stored_file_value):
 
         if not stored_value:
             return []
         options = [{'label':str(n), 'value':str(n)} for n in stored_value]
-        return(options)
+        return(options, options[0]['label'])
         
     @dash_app.callback(
         Output('file_storage_id', 'data'),

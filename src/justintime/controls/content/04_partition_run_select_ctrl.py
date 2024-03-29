@@ -52,7 +52,7 @@ def init_callbacks(dash_app, engine):
         if not data:
             return {}
         opts = list(data.keys())
-        return (opts, None)
+        return (opts, opts[0])
 
 
     @dash_app.callback(
@@ -70,14 +70,17 @@ def init_callbacks(dash_app, engine):
     
     @dash_app.callback(
         Output('run_select_ctrl', 'options'),
-        Input('partition_storage_id', 'data')
+        Output('run_select_ctrl', 'value'),
+        Input('partition_storage_id', 'data'),
+        State('run_select_ctrl', 'value')
         )
-    def update_select(stored_value):
+    def update_select(stored_value, stored_run_value):
         logging.debug('update_run_selection called')
         if not stored_value:
-            return []
-        options = [{'label':str(n), 'value':str(n)} for n in sorted(stored_value, reverse=True)]
-        return(options)
+            return [], None
+        options = [{'label':str(n), 'value':str(n)} for n in stored_value]
+        latest_run_number = max(options, key=lambda x: int(x['label']))['label']
+        return(options, latest_run_number)
         
 
     @dash_app.callback(

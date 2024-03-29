@@ -26,11 +26,14 @@ def init_callbacks(dash_app, engine):
 
     @dash_app.callback(
         Output('trigger_record_select_ctrl', 'options'),
-        Input('file_storage_id', 'data')
+        Output('trigger_record_select_ctrl', 'value'),
+        Input('file_storage_id', 'data'),
+        State('trigger_record_select_ctrl', 'value')
         )
     
-    def update_trigger_record_select(raw_data_file):
+    def update_trigger_record_select(raw_data_file, stored_trigger_record):
         if not raw_data_file:
             return []
         tr_nums = [{'label':str(n), 'value':str(n)} for n in engine.get_trigger_record_list(raw_data_file)]
-        return(tr_nums)
+        latest_trigger_number = max(tr_nums, key=lambda x: int(x['label']))['label']
+        return(tr_nums, str(latest_trigger_number))

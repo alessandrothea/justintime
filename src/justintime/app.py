@@ -49,6 +49,12 @@ def init_dashboard(dash_app, raw_data_path, channel_map_id,template):
     layout = []
     layout.append(create_navbar(pages))
 
+    interval_time_seconds = 30
+    interval = dcc.Interval(
+        id="refresh_interval", interval=interval_time_seconds*1000, n_intervals=0
+    )
+    layout.append(interval)
+
     layout.append(html.Div(
     children=[
         html.Div(
@@ -99,8 +105,8 @@ def init_dashboard(dash_app, raw_data_path, channel_map_id,template):
                                 
                             ],
                         ),
-                        html.Div([plot.div for plot in plots], id = "plots_div",style={'fontSize': '14px '})],
-                
+                        html.Div([plot.div for plot in plots], id = "plots_div",style={'fontSize': '14px '})
+                    ],
                 ),
             
     ],style={"backgroundColor":["#f6f3f3e4" if template=="flatly" else "#222"]})]
@@ -112,7 +118,7 @@ def init_dashboard(dash_app, raw_data_path, channel_map_id,template):
 
     dash_app.layout = html.Div(layout)
 
-def init_page_callback(dash_app, storge):
+def init_page_callback(dash_app, storage):
     pages, plots, ctrls = ld.get_elements()
     
     page_output=[Output("text_page","children")]
@@ -144,7 +150,7 @@ def init_page_callback(dash_app, storge):
                 
                 if f"/{page.id}" in pathname or pathname=="/":
                     page_output=page.name
-                    return(calculate_page_style_list(page, plots, ctrls, style_list, storge))
+                    return(calculate_page_style_list(page, plots, ctrls, style_list, storage))
                     
         return(style_list)    
 
@@ -161,7 +167,7 @@ def init_page_callback(dash_app, storge):
                     
                     return([page.text])
           
-def calculate_page_style_list(page, plots, ctrls, style_list, storge):
+def calculate_page_style_list(page, plots, ctrls, style_list, storage):
     needed_plots = []
     needed_ctrls = []
     for plot_n, plot in enumerate(plots):
@@ -171,7 +177,7 @@ def calculate_page_style_list(page, plots, ctrls, style_list, storge):
             for ctrl in ctrls:
                 if (ctrl.id in plot.ctrls) and not (ctrl.id in needed_ctrls):
                     needed_ctrls.append(ctrl.id)
-    storge.update_shown_plots(needed_plots)
+    storage.update_shown_plots(needed_plots)
     needed_ctrls = get_ctrl_dependancies(ctrls,needed_ctrls)
 
     for ctrl_n, ctrl in enumerate(ctrls):

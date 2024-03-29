@@ -35,8 +35,9 @@ def init_callbacks(dash_app, storage, plot_id,theme):
     @dash_app.callback(
         Output(plot_id, "children"),
         Input("90_plot_button_ctrl", "n_clicks"),
+        Input('14_waveform_vs_tp_plot', 'style'),
         State('07_refresh_ctrl', "value"),
-        State('trigger_record_select_ctrl', "value"),
+        Input('trigger_record_select_ctrl', "value"),
         State("partition_select_ctrl","value"),
         State("run_select_ctrl","value"),
         State("adc_map_selection_ctrl", "value"),
@@ -46,7 +47,7 @@ def init_callbacks(dash_app, storage, plot_id,theme):
         State('file_select_ctrl', "value"),
         State(plot_id, "children"),
     )
-    def plot_fft_graph(n_clicks,refresh, trigger_record,partition,run,plane,channel_num,offset,overlay_tps,raw_data_file,original_state):
+    def plot_fft_graph(n_clicks, plot_style, refresh, trigger_record, partition, run, plane, channel_num, offset, overlay_tps, raw_data_file, original_state):
     
         load_figure_template(theme)
         

@@ -109,8 +109,9 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
     @dash_app.callback(
         Output(plot_id, "children"),
         Input("90_plot_button_ctrl", "n_clicks"),
+        Input('13_adc_tp_plot', 'style'),
         State('07_refresh_ctrl', "value"),
-        State('trigger_record_select_ctrl', "value"),
+        Input('trigger_record_select_ctrl', "value"),
         State('file_select_ctrl', "value"),
         State("partition_select_ctrl","value"),
         State("run_select_ctrl","value"),
@@ -125,7 +126,7 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
         State("height_select_ctrl","value"),
         State(plot_id, "children"),
     )
-    def plot_trd_graph(n_clicks, refresh,trigger_record, raw_data_file, partition, run, adcmap_selection, colorscale, tr_color_range, static_image, offset, overlay_tps,orientation,height,original_state):
+    def plot_trd_graph(n_clicks, plot_style, refresh, trigger_record, raw_data_file, partition, run, adcmap_selection, colorscale, tr_color_range, static_image, offset, overlay_tps, orientation, height, original_state):
         
         load_figure_template(theme)
         orientation = orientation

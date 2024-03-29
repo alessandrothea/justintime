@@ -18,7 +18,7 @@ def return_obj(dash_app, engine, storage):
                 {'label': 'V', 'value': 'V'},
                 {'label': 'U', 'value': 'U'},
             ],
-            value=[],
+            value=['Z', 'U', 'V'],
             labelStyle={'display': 'inline-block',"marginRight":"0.2em"},
             style={'display': 'inline-block',"marginRight":"0.2em"},
         )

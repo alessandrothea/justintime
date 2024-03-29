@@ -1,5 +1,6 @@
 from dash import html, dcc
 from dash.dependencies import Input, Output, State
+import logging
 
 from .. import ctrl_class
 
