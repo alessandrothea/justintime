@@ -20,6 +20,7 @@ def return_obj(dash_app, engine, storage,theme):
     plot.add_ctrl("partition_select_ctrl")
     plot.add_ctrl("run_select_ctrl")
     plot.add_ctrl("06_trigger_record_select_ctrl")
+    plot.add_ctrl("23_apa_select_ctrl")
     plot.add_ctrl("90_plot_button_ctrl")
     plot.add_ctrl("08_adc_map_selection_ctrl")
     plot.add_ctrl("09_colorscale_ctrl")
@@ -110,6 +111,7 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
         Output(plot_id, "children"),
         Input("90_plot_button_ctrl", "n_clicks"),
         State('07_refresh_ctrl', "value"),
+        State('apa_select_ctrl', "value"),
         State('trigger_record_select_ctrl', "value"),
         State('file_select_ctrl', "value"),
         State("partition_select_ctrl","value"),
@@ -125,7 +127,7 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
         State("height_select_ctrl","value"),
         State(plot_id, "children"),
     )
-    def plot_trd_graph(n_clicks, refresh,trigger_record, raw_data_file, partition, run, adcmap_selection, colorscale, tr_color_range, static_image, offset, overlay_tps,orientation,height,original_state):
+    def plot_trd_graph(n_clicks, refresh,apa_name,trigger_record, raw_data_file, partition, run, adcmap_selection, colorscale, tr_color_range, static_image, offset, overlay_tps,orientation,height,original_state):
         
         load_figure_template(theme)
         orientation = orientation

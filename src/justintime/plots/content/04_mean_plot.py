@@ -11,6 +11,7 @@ import logging
 from ... plotting_functions import add_dunedaq_annotation, selection_line,nothing_to_plot,tp_hist_for_mean_std
 from .. import plot_class
 
+from dqmtools.dqmplots import *
 
 def return_obj(dash_app, engine, storage,theme):
     plot_id = "04_mean_plot"
@@ -55,55 +56,17 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                     logging.info(data.df_dict)
 
                     if data.df_dict["trh"].size != 0:
-                        
+
                         try:
-                            data_U, data_V, data_Z = data.get_adcs_per_planes()
-                            data_U_mean, data_V_mean, data_Z_mean = data.get_adcs_per_planes("adc_mean")
+                            fig_mean = plot_WIBETH_by_channel_DQM(data.df_dict,"adc_mean",data.tpc_datkey,run=run,trigger=trigger_record)
                         except KeyError:
                             return( html.Div([html.H6("No relevant TPC data found"),
                                               html.H6(nothing_to_plot())]))
-                        
-                        logging.info("Dataframe in Z-Plane:")
-                        logging.info(data_Z)
-                        logging.info("Dataframe in V-Plane:")
-                        logging.info(data_V)
-                        logging.info("Dataframe in U-Plane:")
-                        logging.info(data_U)
 
-                        logging.info("Mean Z-Plane")
-                        logging.info(data_Z_mean)
-                        logging.info("Mean V-Plane")
-                        logging.info(data_V_mean)
-                        logging.info("Mean U-Plane")
-                        logging.info(data_U_mean)
-                        
-                        
-                        fig_mean = make_subplots(rows=1, cols=3,
-                        subplot_titles=("Mean U-Plane", "Mean V-Plane", "Mean Z-Plane"))
+                        if fig_mean is None:
+                            return( html.Div([html.H6("No relevant TPC data found"),
+                                              html.H6(nothing_to_plot())]))
 
-                        fig_mean = make_subplots(rows=2, cols=3,shared_xaxes=True,row_heights=[1.4,0.4],vertical_spacing=0.04,
-                        subplot_titles=("Mean U-Plane", "Mean V-Plane", "Mean Z-Plane"))
-
-                        #fig_mean.add_trace(tp_hist_for_mean_std(data.tp_df_U,data.xmin_U,data.xmax_U,  data.info),row=2,col=1)
-                        #fig_mean.add_trace(tp_hist_for_mean_std(data.tp_df_V,data.xmin_V,data.xmax_V,  data.info),row=2,col=2)
-                        #fig_mean.add_trace(tp_hist_for_mean_std(data.tp_df_Z,data.xmin_Z,data.xmax_Z,  data.info),row=2,col=3)
-                       
-                        fig_mean.add_trace(
-                            go.Scattergl(x=data_U_mean.reset_index().index.astype(int), y=data_U_mean, mode='markers',marker=dict(color="darkblue"), name=f"Run {data.run}: {data.trigger}"),
-                            row=1, col=1
-                        )
-                        
-                        fig_mean.add_trace(
-                            go.Scattergl(x=data_V_mean.reset_index().index.astype(int), y=data_V_mean, mode='markers',marker=dict(color="darkred"),name=f"Run {data.run}: {data.trigger}"),
-                            row=1, col=2
-                        )
-
-                        fig_mean.add_trace(
-                            go.Scattergl(x=data_Z_mean.reset_index().index.astype(int), y=data_Z_mean, mode='markers',marker=dict(color="darkgreen"), name=f"Run {data.run}: {data.trigger}"),
-                            row=1, col=3
-                        )
-                    #    fig_mean.update_xaxes(mirror=True,showline=True,linecolor='black',)
-                    #    fig_mean.update_yaxes(mirror=True,showline=True,linecolor='black',)
                         fig_mean.update_layout(
                             # autosize=False,
                             # width=1200,

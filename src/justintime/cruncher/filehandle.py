@@ -15,6 +15,7 @@ from collections import defaultdict
 from itertools import groupby
 
 import hdf5libs
+import h5py
 import dqmtools.dataframe_creator as dfc
 import detchannelmaps
 
@@ -70,6 +71,7 @@ class FileHandle:
             return 'HD_TPC'
         else:
             return channel_map_name
+
 
     def __init__(self, data_path: str, channel_map_name: str = 'PDHD') -> None:
 
@@ -173,7 +175,24 @@ class FileHandle:
         tsl = self.get_timeslice_list(file_name)
 
         return trl if trl else tsl
-    
+
+    def get_tpc_element_names(self, file_name: str) -> list:
+        file_path = os.path.join(self.data_path, file_name)
+        op_env = None
+        with h5py.File(file_path, 'r') as f:
+            op_env = f.attrs["operational_environment"]
+        if op_env is None:
+            return [""]
+        if op_env=="np04hd":
+            return ["APA_P02SU","APA_P02NL","APA_P01SU","APA_P01NL"]
+        if op_env=="np02vd":
+            return ["BottomCRP4","BottomCRP5"]
+        if op_env=="np02vdcoldbox":
+            return ["BottomCRP"]
+        if op_env=="iceberghd" or op_env=="iceberg" or "icebergvd":
+            return ["TPC-0-N","TPC-0-S"]
+        return [""]
+
     def load_entry(self, file_name: str, entry: int):
         uid = (file_name, entry)
 
@@ -189,7 +208,7 @@ class FileHandle:
         
 
         df_dict = {}
-        df_dict = dfc.process_record(h5_file,(entry, 0),df_dict)
+        df_dict = dfc.process_record(h5_file,(entry, 0),df_dict,MAX_WORKERS=10,ana_data_prescale=1,wvfm_data_prescale=1)
         df_dict = dfc.concatenate_dataframes(df_dict)
 
         self.cache[uid] = df_dict
