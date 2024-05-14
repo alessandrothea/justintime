@@ -184,7 +184,7 @@ class FileHandle:
         if op_env is None:
             return [""]
         if op_env=="np04hd":
-            return ["APA_P02SU","APA_P02NL","APA_P01SU","APA_P01NL"]
+            return ["APA1","APA2","APA3","APA4"]
         if op_env=="np02vd":
             return ["BottomCRP4","BottomCRP5"]
         if op_env=="np02vdcoldbox":

@@ -11,6 +11,8 @@ import logging
 from .. import plot_class
 from ... plotting_functions import add_dunedaq_annotation, selection_line, make_static_img, nothing_to_plot, make_tp_plot,make_tp_overlay, make_ta_overlay
 
+from dqmtools.dqmplots import *
+
 def return_obj(dash_app, engine, storage,theme):
     plot_id = "13_adc_tp_plot"
     plot_div = html.Div(id = plot_id)
@@ -105,6 +107,25 @@ def plot_adc_map(data, plane_id, colorscale, tr_color_range, static_image, offse
 
     return children
 
+def formate_figure(fig, height, plane_id):
+    fig.update_layout(
+        height=height,
+        showlegend=True
+    )
+
+    add_dunedaq_annotation(fig)
+    fig.update_layout(font_family="Lato", title_font_family="Lato")
+
+    fig.update_layout(legend=dict(yanchor="top", y=0.01, xanchor="left", x=1))
+
+    children = [
+        html.B(f"ADC Counts: {plane_id}-plane"),#, Initial TS: {str(data.ts_min)}"),
+        #html.Hr(),
+        dcc.Graph(figure=fig,style={"marginTop":"10px","marginBottom":"10px"}),
+    ]
+
+    return children
+
 def init_callbacks(dash_app, storage, plot_id, engine, theme):
 
     @dash_app.callback(
@@ -136,26 +157,38 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
                 try: data = storage.get_trigger_record_data(trigger_record, raw_data_file)
                 except RuntimeError: return(html.Div("Please choose both a run data file and trigger record"))
 
-                logging.debug(f"Initial Time Stamp: {data.ts_min}")
-                logging.debug(" ")
-                logging.debug("Initial Dataframe:")
-                logging.debug(data.df_tsoff)
+                #logging.debug(f"Initial Time Stamp: {data.ts_min}")
+                #logging.debug(" ")
+                #logging.debug("Initial Dataframe:")
+                #logging.debug(data.df_tsoff)
                 
-                if len(data.df)!=0 and len(data.df.index!=0):
-                    data.init_tp()
-                    data.init_ta()
+                if data.df_dict["trh"].size != 0:
+                    #data.init_tp()
+                    #data.init_ta()
                     # data.init_cnr()
                     # rich.print(static_image,offset,overlay_tps,orientation,height)
                     children = []
                     if 'Z' in adcmap_selection:
                         logging.info("Z Plane selected")
-                        children += plot_adc_map(data, 'Z', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
+                        #children += plot_adc_map(data, 'Z', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
+                        fig = plot_WIBEth_adc_map(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,
+                                                  plane=2, apa=apa_name,
+                                                  orientation=orientation, colorscale=colorscale, color_range=tr_color_range,)
+                        children += formate_figure(fig,height,"Z")
                     if 'V' in adcmap_selection:
                         logging.info("V Plane selected")
-                        children += plot_adc_map(data, 'V', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
+                        #children += plot_adc_map(data, 'V', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
+                        fig = plot_WIBEth_adc_map(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,
+                                                  plane=1, apa=apa_name,
+                                                  orientation=orientation, colorscale=colorscale, color_range=tr_color_range,)
+                        children += formate_figure(fig,height,"V")
                     if 'U' in adcmap_selection:
                         logging.info("U Plane selected")
-                        children += plot_adc_map(data, 'U', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
+                        #children += plot_adc_map(data, 'U', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
+                        fig = plot_WIBEth_adc_map(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,
+                                                  plane=0, apa=apa_name,
+                                                  orientation=orientation, colorscale=colorscale, color_range=tr_color_range,)
+                        children += formate_figure(fig,height,"U")
 
                     if adcmap_selection:
                         return(html.Div([
