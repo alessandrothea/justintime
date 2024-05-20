@@ -36,76 +36,6 @@ def return_obj(dash_app, engine, storage,theme):
     init_callbacks(dash_app, storage, plot_id, engine,theme)
     return(plot)
 
-def plot_adc_map(data, plane_id, colorscale, tr_color_range, static_image, offset, overlay_tps, orientation, height):
-    fzmin, fzmax = tr_color_range
-    ts_title =  'DTS time ticks (16ns)'
-    och_title = 'Offline Channel'
-
-    if "offset_removal" in offset:
-        df_adc = (getattr(data, f'df_{plane_id}') - getattr(data,f'df_{plane_id}_mean'))
-        logging.info("Offset removal selected")
-        note = "(offset removal)"
-    else:
-        df_adc = getattr(data, f"df_{plane_id}")
-        note = ""
-
-    if orientation == 'horizontal':
-        df_adc = df_adc.T
-        xaxis_title = ts_title
-        yaxis_title = och_title
-        
-    elif orientation == 'vertical':
-        xaxis_title = och_title
-        yaxis_title = ts_title
-        
-    else:
-        raise ValueError(f"Unexpeced orientation value found {orientation}. Expected values [horizontal, vertical]")
-
-    df_tps = getattr(data, f'tp_df_{plane_id}')
-    df_tas = getattr(data, f'ta_df_{plane_id}')
-
-    # logging.debug(f"Raw ADCs in {plane_id}-Plane {note}:")
-    # logging.debug(df_adc)
-            
-    title = f"{plane_id}-plane offset removal, Run {data.info['run_number']}: {data.info['trigger_number']}"
-    if "make_static_image" in static_image:
-        fig = make_static_img(df_adc, zmin = fzmin, zmax = fzmax, title=title, colorscale=colorscale, height=height,orientation=orientation)
-    else:
-        # richloggi.print(fzmin,fzmax)                                     
-        fig = px.imshow(df_adc, zmin=fzmin, zmax=fzmax, title=title, color_continuous_scale=colorscale, aspect="auto")
-
-    if "ta_overlay" in overlay_tps:
-
-        logging.debug(f"TAs in {plane_id}-Plane:")
-        logging.debug(df_tas)
-        for t in make_ta_overlay(df_tas, fzmin,fzmax, orientation):
-            fig.add_trace(t)
-
-    if "tp_overlay" in overlay_tps:
-
-        logging.debug(f"TPs in {plane_id}-Plane:")
-        logging.debug(df_tps)
-        fig.add_trace(make_tp_overlay(df_tps, fzmin,fzmax, orientation))
-    
-    fig.update_layout(
-        height=height,
-        yaxis_title=yaxis_title,
-        xaxis_title=xaxis_title,
-        showlegend=True
-        )
-
-    add_dunedaq_annotation(fig)
-    fig.update_layout(font_family="Lato", title_font_family="Lato")
-
-    fig.update_layout(legend=dict(yanchor="top", y=0.01, xanchor="left", x=1))
-
-    children = [
-        html.B(f"ADC Counts: {plane_id}-plane, Initial TS: {str(data.ts_min)}"),
-        #html.Hr(),
-        dcc.Graph(figure=fig,style={"marginTop":"10px","marginBottom":"10px"}),
-    ]
-
-    return children
 
 def formate_figure(fig, height, plane_id):
     fig.update_layout(
@@ -148,6 +78,7 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
         State("height_select_ctrl","value"),
         State(plot_id, "children"),
     )
+
     def plot_trd_graph(n_clicks, refresh,apa_name,trigger_record, raw_data_file, partition, run, adcmap_selection, colorscale, tr_color_range, static_image, offset, overlay_tps,orientation,height,original_state):
         
         load_figure_template(theme)
@@ -173,6 +104,8 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
                         #children += plot_adc_map(data, 'Z', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
                         fig = plot_WIBEth_adc_map(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,
                                                   plane=2, apa=apa_name,
+                                                  make_static=static_image,
+                                                  make_tp_overlay=overlay_tps,
                                                   orientation=orientation, colorscale=colorscale, color_range=tr_color_range,)
                         children += formate_figure(fig,height,"Z")
                     if 'V' in adcmap_selection:
@@ -180,6 +113,8 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
                         #children += plot_adc_map(data, 'V', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
                         fig = plot_WIBEth_adc_map(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,
                                                   plane=1, apa=apa_name,
+                                                  make_static=static_image,
+                                                  make_tp_overlay=overlay_tps,
                                                   orientation=orientation, colorscale=colorscale, color_range=tr_color_range,)
                         children += formate_figure(fig,height,"V")
                     if 'U' in adcmap_selection:
@@ -187,6 +122,8 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
                         #children += plot_adc_map(data, 'U', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
                         fig = plot_WIBEth_adc_map(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,
                                                   plane=0, apa=apa_name,
+                                                  make_static=static_image,
+                                                  make_tp_overlay=overlay_tps,
                                                   orientation=orientation, colorscale=colorscale, color_range=tr_color_range,)
                         children += formate_figure(fig,height,"U")
 
