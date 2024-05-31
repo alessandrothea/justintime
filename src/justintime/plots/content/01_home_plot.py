@@ -65,7 +65,7 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                     logging.info(f"Initial Time Stamp: {data.df_dict['frh'].window_begin_dts}")
                     logging.info(" ")
                     logging.info("Initial Dataframe:")
-                    logging.info(data.df_dict['frh'].trigger_timestamp_dts)
+                    logging.info(data.df_dict['trh'].trigger_timestamp_dts)
                     
                     if data.df_dict['trh'].size != 0:
 
@@ -130,7 +130,45 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                                          'minWidth': '120px', 'width': '120px', 'maxWidth': '120px',
                                          'font-family':'Open Sans'}
                             ]
-                        
+
+                        #trigger info table
+#                        table=pd.DataFrame({
+#                            'TR Attribute': [
+#                                'Run',
+#                                'Trigger number',
+#                                'Trigger sequence',
+#                                'Trigger timestamp (dts ticks)', 
+#                                'Trigger timestamp (sec from epoc)',
+#                                'Trigger date',
+#                                'Number of fragments',
+#                                'Number of requested components',
+#                                'Trigger type',
+#                                'Total size (MB)'
+#                            ],
+#                            'Value': [
+#                                data.df_dict["trh"]["run"].iloc[0],
+#                                data.df_dict["trh"]["trigger"].iloc[0],
+#                                data.df_dict["trh"]["sequence"].iloc[0],
+#                                data.df_dict["trh"]["trigger_timestamp_dts"].iloc[0],
+#                                data.df_dict["trh"]["trigger_timestamp_dts"].iloc[0]*16/1e9,
+#                                data.df_dict["trh"]["trigger_time"].iloc[0],
+#                                data.df_dict["trh"]["n_fragments"].iloc[0],
+#                                data.df_dict["trh"]["n_requested_components"].iloc[0],
+#                                data.df_dict["trh"]["trigger_type"].iloc[0],
+#                                data.df_dict["trh"]["total_size_bytes"].iloc[0]/1e6
+#                            ]
+#                        })
+
+                        table=data.df_dict["trh"]
+                        children=([dash_table.DataTable(
+                                id='table',
+                                columns=[{"name": i, "id": i} for i in table.columns],
+                                data=table.to_dict('records'),
+                                style_header={'textAlign': 'left'},
+                                style_cell={'textAlign': 'left'}
+                                )
+                                ])
+
                         children_tpc=([dash_table.DataTable(
                                     id='table_tpc',
                                     columns=[{"name": i, "id": i} for i in results_tpc.columns],
@@ -155,6 +193,7 @@ def init_callbacks(dash_app, storage, plot_id,theme):
   
                         return(html.Div([
                                 selection_line(partition,run,raw_data_file, trigger_record),
+                                html.Div(children),
                                 html.H4("TPC:"),
                                 html.Div(children_tpc),
                                 html.Hr(),
