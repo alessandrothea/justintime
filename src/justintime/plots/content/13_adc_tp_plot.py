@@ -101,37 +101,53 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
                     children = []
                     if 'Z' in adcmap_selection:
                         logging.info("Z Plane selected")
-                        #children += plot_adc_map(data, 'Z', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
                         fig = plot_WIBEth_adc_map(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,
                                                   plane=2, apa=apa_name,
                                                   make_static=static_image,
                                                   make_tp_overlay=overlay_tps,
                                                   orientation=orientation, colorscale=colorscale, color_range=tr_color_range,)
-                        children += formate_figure(fig,height,"Z")
+                        if fig is not None:
+                            children += formate_figure(fig,height,"Z")
+                        else:
+                            #return(html.Div(html.H6(nothing_to_plot())))
+                            #print(nothing_to_plot())
+                            children += html.H6(nothing_to_plot())
                     if 'V' in adcmap_selection:
                         logging.info("V Plane selected")
-                        #children += plot_adc_map(data, 'V', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
                         fig = plot_WIBEth_adc_map(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,
                                                   plane=1, apa=apa_name,
                                                   make_static=static_image,
                                                   make_tp_overlay=overlay_tps,
                                                   orientation=orientation, colorscale=colorscale, color_range=tr_color_range,)
-                        children += formate_figure(fig,height,"V")
+                        if fig is not None:
+                            children += formate_figure(fig,height,"V")
+                        else:
+                            #return(html.Div(html.H6(nothing_to_plot())))
+                            #print(nothing_to_plot())
+                            children += html.H6(nothing_to_plot())
                     if 'U' in adcmap_selection:
                         logging.info("U Plane selected")
-                        #children += plot_adc_map(data, 'U', colorscale, tr_color_range, static_image, offset, overlay_tps, orientation,height)
                         fig = plot_WIBEth_adc_map(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,
                                                   plane=0, apa=apa_name,
                                                   make_static=static_image,
                                                   make_tp_overlay=overlay_tps,
                                                   orientation=orientation, colorscale=colorscale, color_range=tr_color_range,)
-                        children += formate_figure(fig,height,"U")
+                        if fig is not None:
+                            children += formate_figure(fig,height,"U")
+                        else:
+                            #return(html.Div(html.H6(nothing_to_plot())))
+                            #print(nothing_to_plot())
+                            children += html.H6(nothing_to_plot())
 
                     if adcmap_selection:
-                        return(html.Div([
+                        #html_divs = [ selection_line(partition,run,raw_data_file, trigger_record) ]
+                        #for child in children:
+                        #    html_divs += html.Div(child)
+                        return(html.Div((
                             selection_line(partition,run,raw_data_file, trigger_record),
                             #html.Hr(),
-                            html.Div(children)]))
+                            html.Div(children))))
+                        return (html.Div(html_divs))
                     else:
                         return(html.Div(html.H6("No ADC map selected")))
                     

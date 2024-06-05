@@ -62,18 +62,22 @@ def init_callbacks(dash_app, storage, plot_id,theme):
                 #logging.info("Initial Dataframe:")
                 #logging.info(data.df_tsoff)
 
-                print(data.df_dict["trh"].size)
                 if data.df_dict["trh"].size != 0:
 
-                    #data.init_tp()
-
                     if channel_num:
-#                        return(html.Div(selection_line(partition,run,raw_data_file, trigger_record)),
-#                               html.Div([graph(partition,run,raw_data_file, trigger_record,data,offset,plane,overlay_tps,val) for val in channel_num]))
+
+                        figs = []
+                        for ch in channel_num:
+                            fig = plot_WIBEth_waveform(df_dict=data.df_dict,
+                                                       tpc_det_key=data.tpc_datkey,channel=ch,
+                                                       offset=offset,overlay_tps=overlay_tps)
+                            if fig is not None:
+                                figs.append(wrap_figure(fig))
+                            else:
+                                figs.append(html.H6(nothing_to_plot()))
+
                         return(html.Div(selection_line(partition,run,raw_data_file, trigger_record)),
-                               html.Div([ wrap_figure(plot_WIBEth_waveform(df_dict=data.df_dict, tpc_det_key=data.tpc_datkey,channel=ch,
-                                                                           offset=offset,overlay_tps=overlay_tps),
-                                                      run_number=run,trigger_number=trigger_record[0],channel_num=ch) for ch in channel_num]))
+                               html.Div(figs))
 
                     else:
                         return(html.Div(html.H6("No Channel Selected")))

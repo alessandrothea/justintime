@@ -139,7 +139,7 @@ class DataManager:
         re_app_run = re.compile(r'(.*)_run(\d*)')
 
         # List files
-        lf = self.list_files()
+        lf = sorted(self.list_files())
 
         def extract_session_run( fname : str ):
             m = re_app_run.match(fname)

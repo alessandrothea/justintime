@@ -66,5 +66,6 @@ def init_callbacks(dash_app, engine, storage):
                 channel_num = np.append(channel_num,df_tmp.loc[df_tmp["plane"]==plane_no]["channel"])
                 #channel_num.extend([{'label':str(n), 'value':(n)} for n in (data.df_U.columns)])
             return(list(np.sort(np.unique(channel_num))))
-        except RuntimeError :return([""])
+        except RuntimeError : return([""])
         except TypeError: return([""])
+        except KeyError: return([""])
