@@ -140,12 +140,8 @@ def init_callbacks(dash_app, storage, plot_id, engine, theme):
                             children += html.H6(nothing_to_plot())
 
                     if adcmap_selection:
-                        #html_divs = [ selection_line(partition,run,raw_data_file, trigger_record) ]
-                        #for child in children:
-                        #    html_divs += html.Div(child)
                         return(html.Div((
                             selection_line(partition,run,raw_data_file, trigger_record),
-                            #html.Hr(),
                             html.Div(children))))
                         return (html.Div(html_divs))
                     else:
